@@ -65,6 +65,7 @@ export default class Admin extends BaseController {
         this.getView()?.setModel(this.emailServer.model, "emailServer");
         this.getView()?.setModel(this.orders.filterModel, "ordersFilter");
         this.getView()?.setModel(this.products.filterModel, "productsFilter");
+        this.getView()?.setModel(this.categories.model, "category");
 
         this.getRouter().getRoute("admin")?.attachPatternMatched((event) => this.onRouteMatched(event));
     }

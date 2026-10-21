@@ -84,6 +84,15 @@
                     class="blSectionTitle"
                 />
 
+                <Image
+                    src="{path: 'catalogView>/categoryId', formatter: '.formatter.categoryImageUrl'}"
+                    alt="{catalogView>/categoryName}"
+                    width="100%"
+                    densityAware="false"
+                    visible="{= !!${catalogView>/categoryImageType} }"
+                    class="blCategoryBanner"
+                />
+
                 <ScrollContainer horizontal="true" vertical="false" width="100%" class="blCategoryNav">
                     <HBox justifyContent="Center" class="blCategoryNavItems">
                         <Button
@@ -92,7 +101,7 @@
                             press=".onCategoryPress"
                             class="blCategoryItem"
                         />
-                        <HBox items="{path: 'catalog>/Categories', sorter: {path: 'Name'}, templateShareable: false}">
+                        <HBox items="{path: 'catalog>/Categories', parameters: {$select: 'ID,Name,CategoryImageType'}, sorter: {path: 'Name'}, templateShareable: false}">
                             <Button
                                 text="{catalog>Name}"
                                 type="{= ${catalogView>/categoryId} === ${catalog>ID} ? 'Emphasized' : 'Transparent' }"

@@ -127,6 +127,12 @@ export default {
 
     catalogImageUrl,
 
+    categoryImageUrl(categoryId: string | null | undefined): string {
+        return categoryId
+            ? `${XsuaaAuthHelper.getConfig().catalogService}Categories(${categoryId})/CategoryImage`
+            : "";
+    },
+
     bannerUrl(bannerId: string | null | undefined, version: string | null | undefined): string {
         return bannerId
             ? `${XsuaaAuthHelper.getConfig().catalogService}StoreBanners(${bannerId})/BannerImage?v=${encodeURIComponent(version ?? "")}`

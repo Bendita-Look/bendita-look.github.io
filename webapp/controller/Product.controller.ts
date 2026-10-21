@@ -3,6 +3,14 @@ import type { Route$PatternMatchedEvent } from "sap/ui/core/routing/Route";
 import type Carousel from "sap/m/Carousel";
 import type Event from "sap/ui/base/Event";
 import type Control from "sap/ui/core/Control";
+import type Dialog from "sap/m/Dialog";
+import type Table from "sap/m/Table";
+import type ColumnListItem from "sap/m/ColumnListItem";
+import type Text from "sap/m/Text";
+import Column from "sap/m/Column";
+import ColumnListItemControl from "sap/m/ColumnListItem";
+import TextControl from "sap/m/Text";
+import Fragment from "sap/ui/core/Fragment";
 import BaseController from "./BaseController";
 import { imagesForColor, sortBySize } from "../util/variants";
 
@@ -25,6 +33,14 @@ interface CatalogImage {
     SortOrder?: number | null;
 }
 
+interface MeasurementEntry {
+    ID?: string;
+    Size: string;
+    Label: string;
+    Value?: string | null;
+    SortOrder?: number | null;
+}
+
 interface CatalogProduct {
     ID: string;
     Name: string;
@@ -34,6 +50,16 @@ interface CatalogProduct {
     Colors: CatalogColor[];
     Variants: CatalogVariant[];
     Images: CatalogImage[];
+    Measurements?: MeasurementEntry[];
+}
+
+interface SizeGuideColumn {
+    label: string;
+}
+
+interface SizeGuideRow {
+    size: string;
+    cells: string[];
 }
 
 interface SizeOption {
@@ -43,7 +69,8 @@ interface SizeOption {
 }
 
 
-const PRODUCT_EXPAND = "Category($select=Name),Colors,Variants,Images($select=ID,Color_ID,SortOrder)";
+const PRODUCT_EXPAND = "Category($select=Name),Colors,Variants,Images($select=ID,Color_ID,SortOrder),"
+    + "Measurements($select=ID,Size,Label,Value,SortOrder)";
 
 /**
  * @namespace apps.dflc.benditalook.controller
@@ -51,6 +78,8 @@ const PRODUCT_EXPAND = "Category($select=Name),Colors,Variants,Images($select=ID
 export default class Product extends BaseController {
 
     private productModel: JSONModel;
+
+    private sizeGuideDialog?: Dialog;
 
     public onInit(): void {
         this.productModel = new JSONModel(this.emptyState());
@@ -117,12 +146,94 @@ export default class Product extends BaseController {
 
             this.productModel.setProperty("/product", product);
             this.productModel.setProperty("/colors", product.Colors);
+            this.applySizeGuide(product);
             this.productModel.setProperty("/loaded", true);
             this.selectColor(product.Colors[0]?.ID ?? "");
         } catch (error) {
             this.handleError(error, "productNotFound");
             this.navTo("catalog", {}, true);
         }
+    }
+
+    public async onOpenSizeGuide(): Promise<void> {
+        const dialog = await this.getSizeGuideDialog();
+
+        this.buildSizeGuideColumns();
+        dialog.open();
+    }
+
+    public onCloseSizeGuide(): void {
+        this.sizeGuideDialog?.close();
+    }
+
+    private applySizeGuide(product: CatalogProduct): void {
+        const entries = product.Measurements ?? [];
+
+        const labels: string[] = [];
+        const sizes: string[] = [];
+
+        entries.forEach((entry) => {
+            if (entry.Label && !labels.includes(entry.Label)) {
+                labels.push(entry.Label);
+            }
+
+            if (entry.Size && !sizes.includes(entry.Size)) {
+                sizes.push(entry.Size);
+            }
+        });
+
+        const hasSizeGuide = labels.length > 0 && sizes.length > 0;
+
+        this.productModel.setProperty("/sizeGuide", {
+            columns: labels.map((label) => ({ label })),
+            rows: sizes.map((size) => ({
+                size,
+                cells: labels.map((label) => this.measurementOf(entries, size, label))
+            }))
+        });
+        this.productModel.setProperty("/hasSizeGuide", hasSizeGuide);
+    }
+
+    private measurementOf(entries: MeasurementEntry[], size: string, label: string): string {
+        const entry = entries.find((candidate) => candidate.Size === size && candidate.Label === label);
+
+        return entry?.Value ?? "—";
+    }
+
+    private buildSizeGuideColumns(): void {
+        const table = Fragment.byId(this.getView()?.getId() ?? "", "sizeGuideTable") as Table | undefined;
+        const columns = this.productModel.getProperty("/sizeGuide/columns") as SizeGuideColumn[];
+
+        if (!table) {
+            return;
+        }
+
+        table.destroyColumns();
+        table.destroyItems();
+
+        table.addColumn(new Column({ header: new TextControl({ text: this.getText("size") }) }));
+        columns.forEach((column) => table.addColumn(new Column({ header: new TextControl({ text: column.label }) })));
+
+        const rows = this.productModel.getProperty("/sizeGuide/rows") as SizeGuideRow[];
+
+        rows.forEach((row) => {
+            const cells = [row.size, ...row.cells].map((text) => new TextControl({ text }));
+            table.addItem(new ColumnListItemControl({ cells }));
+        });
+    }
+
+    private async getSizeGuideDialog(): Promise<Dialog> {
+        if (!this.sizeGuideDialog) {
+            this.sizeGuideDialog = await Fragment.load({
+                id: this.getView()?.getId(),
+                name: "apps.dflc.benditalook.view.fragments.SizeGuideDialog",
+                controller: this
+            }) as Dialog;
+
+            this.getView()?.addDependent(this.sizeGuideDialog);
+        }
+
+        return this.sizeGuideDialog;
     }
 
     private selectColor(colorId: string): void {
@@ -161,7 +272,9 @@ export default class Product extends BaseController {
             selectedColorName: "",
             selectedVariantId: "",
             stock: 0,
-            quantity: 1
+            quantity: 1,
+            sizeGuide: { columns: [], rows: [] },
+            hasSizeGuide: false
         };
     }
 

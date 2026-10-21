@@ -138,6 +138,48 @@
                 </Table>
 
                 <Table
+                    id="measurementsTable"
+                    popinLayout="GridSmall"
+                    class="blTable blEditTable sapUiMediumMarginTop"
+                    noDataText="{i18n>noMeasurements}"
+                    items="{path: 'Measurements', parameters: {$$ownRequest: true, $orderby: 'SortOrder'}, templateShareable: false}"
+                >
+                    <headerToolbar>
+                        <Toolbar>
+                            <Title text="{i18n>measurements}" level="H3" />
+                            <ToolbarSpacer />
+                            <Button text="{i18n>addMeasurement}" icon="sap-icon://add" press=".onAddMeasurement" />
+                        </Toolbar>
+                    </headerToolbar>
+                    <columns>
+                        <Column>
+                            <Text text="{i18n>measurementSize}" />
+                        </Column>
+                        <Column>
+                            <Text text="{i18n>measurementLabel}" />
+                        </Column>
+                        <Column minScreenWidth="Tablet" demandPopin="true">
+                            <Text text="{i18n>measurementValue}" />
+                        </Column>
+                        <Column minScreenWidth="Tablet" demandPopin="true">
+                            <Text text="{i18n>displayOrder}" />
+                        </Column>
+                        <Column width="3.5rem" />
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Input value="{Size}" maxLength="40" placeholder="{i18n>sizePlaceholder}" />
+                                <Input value="{Label}" maxLength="40" placeholder="{i18n>measurementLabelPlaceholder}" />
+                                <Input value="{Value}" maxLength="40" placeholder="{i18n>measurementValuePlaceholder}" />
+                                <StepInput value="{SortOrder}" min="0" max="99" width="8rem" />
+                                <Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>delete}" press=".onDeleteRow" />
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+
+                <Table
                     id="imagesTable"
                     updateFinished=".onImagesUpdated"
                     popinLayout="GridSmall"

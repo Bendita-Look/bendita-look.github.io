@@ -89,7 +89,15 @@
                     </VBox>
 
                     <VBox class="blOptionGroup">
-                        <Text text="{i18n>size}" class="blOptionLabel" />
+                        <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
+                            <Text text="{i18n>size}" class="blOptionLabel" />
+                            <Link
+                                text="{i18n>sizeGuideLink}"
+                                visible="{product>/hasSizeGuide}"
+                                press=".onOpenSizeGuide"
+                                class="blSizeGuideLink"
+                            />
+                        </HBox>
                         <HBox items="{path: 'product>/sizes', templateShareable: false}" wrap="Wrap" class="blSizes">
                             <Button
                                 text="{product>text}"

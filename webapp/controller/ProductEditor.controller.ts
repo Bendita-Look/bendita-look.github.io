@@ -74,6 +74,12 @@ export default class ProductEditor extends BaseController {
         void this.loadImages();
     }
 
+    public onAddMeasurement(): void {
+        const binding = this.getListBinding("measurementsTable");
+
+        binding.create({ Size: "", Label: "", Value: "", SortOrder: binding.getLength() ?? 0 }, true);
+    }
+
     public onOpenColorPicker(event: Event): void {
         const source = event.getSource() as Control;
 
