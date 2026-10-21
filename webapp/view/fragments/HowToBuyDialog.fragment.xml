@@ -1,0 +1,39 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Dialog
+        id="howToBuyDialog"
+        title="{i18n>howToBuyTitle}"
+        contentWidth="32rem"
+        class="blDialog"
+        escapeHandler=".onCloseHowToBuy"
+    >
+        <content>
+            <VBox class="blHowToBuy">
+                <Text text="{i18n>howToBuyIntro}" class="blMuted sapUiSmallMarginBottom" wrapping="true" />
+
+                <Carousel
+                    id="howToBuyCarousel"
+                    height="18rem"
+                    loop="false"
+                    showPageIndicator="true"
+                    pages="{
+                        path: 'howToBuy>/steps',
+                        templateShareable: false
+                    }"
+                >
+                    <VBox class="blHowToBuyStep" alignItems="Center" justifyContent="Center">
+                        <core:Icon src="{howToBuy>icon}" class="blHowToBuyIcon" />
+                        <Title text="{howToBuy>title}" level="H3" class="blHowToBuyStepTitle" />
+                        <Text text="{howToBuy>text}" textAlign="Center" wrapping="true" class="blMuted" />
+                    </VBox>
+                </Carousel>
+            </VBox>
+        </content>
+        <buttons>
+            <Button text="{i18n>howToBuySeeFull}" press=".onOpenHelp" />
+            <Button text="{i18n>close}" type="Emphasized" press=".onCloseHowToBuy" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

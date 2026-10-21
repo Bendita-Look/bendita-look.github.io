@@ -34,6 +34,11 @@
                     <Link text="{store>Title}" press=".onOpenPolicy" class="blFooterLink" />
                 </VBox>
             </VBox>
+            <VBox class="blFooterColumn">
+                <Title text="{i18n>footerHelp}" level="H3" class="blFooterTitle" />
+                <Link text="{i18n>howToBuyTitle}" press=".onOpenHowToBuy" class="blFooterLink" />
+                <Link text="{i18n>helpPageTitle}" press=".onOpenHelp" class="blFooterLink" />
+            </VBox>
             <VBox class="blFooterColumn blFooterNewsletter">
                 <Title text="{i18n>newsletterTitle}" level="H3" class="blFooterTitle" />
                 <Text text="{i18n>newsletterHint}" class="blFooterText" />

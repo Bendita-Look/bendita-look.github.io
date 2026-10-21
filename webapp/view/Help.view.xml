@@ -1,0 +1,46 @@
+<mvc:View
+    controllerName="apps.dflc.benditalook.controller.Help"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Page id="helpPage" class="blPage">
+        <customHeader>
+            <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.StoreHeader" type="XML" />
+        </customHeader>
+        <content>
+            <VBox class="blContainer blHelp">
+                <Title text="{i18n>howToBuyTitle}" level="H1" titleStyle="H2" class="blSectionTitle" />
+                <Text text="{i18n>howToBuyIntro}" class="blMuted" wrapping="true" />
+
+                <List
+                    items="{path: 'howToBuy>/steps', templateShareable: false}"
+                    class="blHelpSteps"
+                >
+                    <CustomListItem>
+                        <HBox alignItems="Start" class="blHelpStep">
+                            <core:Icon src="{howToBuy>icon}" class="blHelpStepIcon" />
+                            <VBox class="blHelpStepBody">
+                                <Title text="{howToBuy>title}" level="H3" class="blHelpStepTitle" />
+                                <Text text="{howToBuy>text}" wrapping="true" class="blPolicyText" />
+                            </VBox>
+                        </HBox>
+                    </CustomListItem>
+                </List>
+
+                <MessageStrip
+                    text="{i18n>howToBuyHelpFooter}"
+                    type="Information"
+                    showIcon="true"
+                    class="sapUiMediumMarginTop"
+                />
+
+                <HBox class="sapUiMediumMarginTop" justifyContent="Start">
+                    <Button text="{i18n>talkOnWhatsapp}" icon="sap-icon://discussion" visible="{= !!${store>/Whatsapp} }" press=".onContactWhatsapp" />
+                </HBox>
+            </VBox>
+
+            <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.StoreFooter" type="XML" />
+        </content>
+    </Page>
+</mvc:View>

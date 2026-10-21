@@ -12,6 +12,8 @@ import type JSONModel from "sap/ui/model/json/JSONModel";
 import MessageBox from "sap/m/MessageBox";
 import MessageToast from "sap/m/MessageToast";
 import InstanceManager from "sap/m/InstanceManager";
+import Fragment from "sap/ui/core/Fragment";
+import type Dialog from "sap/m/Dialog";
 import formatter from "../model/formatter";
 import type CartModel from "../model/CartModel";
 import type Component from "../Component";
@@ -27,6 +29,8 @@ import NewsletterService from "../service/NewsletterService";
 export default abstract class BaseController extends Controller {
 
     public readonly formatter = formatter;
+
+    private howToBuyDialog?: Dialog;
 
     protected getRouter(): Router {
         return UIComponent.getRouterFor(this);
@@ -70,6 +74,37 @@ export default abstract class BaseController extends Controller {
         if (key) {
             this.navTo("policy", { type: key });
         }
+    }
+
+    /** Abre o tutorial "Como comprar" em um diálogo com passo a passo. */
+    public async onOpenHowToBuy(): Promise<void> {
+        await this.openHowToBuyDialog();
+    }
+
+    /** Fecha o diálogo do tutorial (botão e tecla Esc). */
+    public onCloseHowToBuy(): void {
+        this.howToBuyDialog?.close();
+    }
+
+    /** Abre a página de ajuda com o passo a passo completo. */
+    public onOpenHelp(): void {
+        this.howToBuyDialog?.close();
+        this.navTo("help");
+    }
+
+    /** Carrega (uma única vez) e abre o diálogo do tutorial. */
+    protected async openHowToBuyDialog(): Promise<void> {
+        if (!this.howToBuyDialog) {
+            this.howToBuyDialog = await Fragment.load({
+                id: this.getView()?.getId(),
+                name: "apps.dflc.benditalook.view.fragments.HowToBuyDialog",
+                controller: this
+            }) as Dialog;
+
+            this.getView()?.addDependent(this.howToBuyDialog);
+        }
+
+        this.howToBuyDialog.open();
     }
 
     /**

@@ -1264,6 +1264,53 @@
     line-height: 1.7;
 }
 
+.blHowToBuy {
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.blHowToBuyStep {
+    gap: 0.75rem;
+    padding: 0 1rem;
+}
+
+.blHowToBuyIcon.sapUiIcon {
+    font-size: 3.5rem;
+    color: var(--bl-gold-dark);
+}
+
+.blHowToBuyStepTitle.sapMTitle {
+    color: var(--bl-text);
+    font-weight: 700;
+}
+
+.blHelp {
+    max-width: 52rem;
+    gap: 1rem;
+}
+
+.blHelpSteps .blHelpStep {
+    gap: 1rem;
+    padding: 0.25rem 0;
+}
+
+.blHelpStepIcon.sapUiIcon {
+    font-size: 2rem;
+    color: var(--bl-gold-dark);
+    flex: 0 0 auto;
+    padding-top: 0.25rem;
+}
+
+.blHelpStepBody {
+    gap: 0.25rem;
+}
+
+.blHelpStepTitle.sapMTitle {
+    color: var(--bl-text);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
 .blUnsubscribe {
     max-width: 34rem;
     margin: 0 auto;

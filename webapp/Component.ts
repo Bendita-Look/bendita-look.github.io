@@ -17,6 +17,7 @@ import { isAuthenticationError, isAuthorizationError, isBackendUnavailableError,
 import { getBackendErrorMessage } from "./util/feedback";
 import StoreService from "./service/StoreService";
 import PolicyService from "./service/PolicyService";
+import { buildHowToBuySteps } from "./model/howToBuy";
 
 const ADMIN_ROUTE = "admin";
 const LOGIN_ROUTE = "login";
@@ -59,6 +60,7 @@ export default class Component extends BaseComponent {
         this.setModel(new CartModel(), "cart");
         this.setModel(new JSONModel({}), "store");
         this.setModel(new JSONModel({ name: "", email: "", busy: false, subscribed: false }), "newsletter");
+        this.setModel(this.createHowToBuyModel(), "howToBuy");
         this.setModel(this.createODataModel(XsuaaAuthHelper.getConfig().catalogService), "catalog");
 
         void this.refreshStoreInfo();
@@ -236,6 +238,11 @@ export default class Component extends BaseComponent {
     private getText(key: string, parameters?: string[]): string {
         const bundle = (this.getModel("i18n") as ResourceModel).getResourceBundle() as ResourceBundle;
         return bundle.getText(key, parameters) ?? key;
+    }
+
+    /** Passos do tutorial "como comprar", compartilhados entre o diálogo e a página de ajuda. */
+    private createHowToBuyModel(): JSONModel {
+        return new JSONModel({ steps: buildHowToBuySteps((key) => this.getText(key)) });
     }
 
 }
