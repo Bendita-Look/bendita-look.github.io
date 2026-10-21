@@ -1,0 +1,58 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+>
+    <Dialog
+        id="policyDialog"
+        title="{= ${path: 'HasActiveEntity', targetType: 'any'} ? ${i18n>editPolicy} : ${i18n>newPolicy} }"
+        contentWidth="34rem"
+        class="blDialog"
+        escapeHandler=".policies.onCancelPolicy"
+    >
+        <content>
+            <form:SimpleForm editable="true" layout="ColumnLayout">
+                <Label text="{i18n>policyType}" required="true" />
+                <VBox>
+                    <Select
+                        selectedKey="{policy>/selectedType}"
+                        change=".policies.onTypeChange"
+                        width="100%"
+                    >
+                        <items>
+                            <core:Item key="RETURN" text="{i18n>policyType.RETURN}" />
+                            <core:Item key="EXCHANGE" text="{i18n>policyType.EXCHANGE}" />
+                            <core:Item key="PRIVACY" text="{i18n>policyType.PRIVACY}" />
+                            <core:Item key="DELIVERY" text="{i18n>policyType.DELIVERY}" />
+                            <core:Item key="TERMS" text="{i18n>policyType.TERMS}" />
+                            <core:Item key="OTHER" text="{i18n>policyType.OTHER}" />
+                            <core:Item key="CUSTOM" text="{i18n>policyType.CUSTOM}" />
+                        </items>
+                    </Select>
+                    <Input
+                        value="{policy>/freeType}"
+                        visible="{policy>/isFreeType}"
+                        maxLength="20"
+                        placeholder="{i18n>policyTypeFreePlaceholder}"
+                        class="sapUiSmallMarginTop"
+                        change=".policies.onFreeTypeChange"
+                    />
+                </VBox>
+                <Label text="{i18n>policyTitle}" required="true" />
+                <Input value="{Title}" maxLength="120" />
+                <Label text="{i18n>policySlug}" />
+                <Input value="{Slug}" maxLength="120" placeholder="{i18n>policySlugPlaceholder}" />
+                <Label text="{i18n>policyContent}" />
+                <TextArea value="{Content}" rows="8" growing="true" growingMaxLines="20" />
+                <Label text="{i18n>policyActive}" />
+                <Switch state="{Active}" customTextOn="{i18n>yes}" customTextOff="{i18n>no}" />
+                <Label text="{i18n>displayOrder}" />
+                <StepInput value="{SortOrder}" min="0" max="99" width="8rem" />
+            </form:SimpleForm>
+        </content>
+        <buttons>
+            <Button text="{i18n>save}" type="Emphasized" press=".policies.onSavePolicy" />
+            <Button text="{i18n>cancel}" press=".policies.onCancelPolicy" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

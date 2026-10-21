@@ -1230,6 +1230,28 @@
     color: var(--bl-text);
 }
 
+.blPolicy {
+    max-width: 52rem;
+    margin: 0 auto;
+}
+
+.blPolicyList .blPolicyItem .sapMLIBContent {
+    color: var(--bl-text);
+}
+
+.blPolicyHeading.sapMTitle {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--bl-text);
+}
+
+.blPolicyText.sapMText {
+    color: var(--bl-text);
+    line-height: 1.7;
+}
+
 .blFooterBottom {
     gap: 0.5rem;
     max-width: 76rem;

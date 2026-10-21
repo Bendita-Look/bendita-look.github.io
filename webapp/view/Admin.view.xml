@@ -343,6 +343,55 @@
                         </Table>
                     </IconTabFilter>
 
+                    <IconTabFilter key="policies" icon="sap-icon://document-text" text="{i18n>policiesTab}">
+                        <Toolbar style="Clear">
+                            <ToolbarSpacer />
+                            <Button text="{i18n>newPolicy}" icon="sap-icon://add" type="Emphasized" press=".policies.onNewPolicy" />
+                        </Toolbar>
+                        <Table
+                            id="policiesTable"
+                            popinLayout="GridSmall"
+                            noDataText="{i18n>noPoliciesAdmin}"
+                            class="blTable"
+                            items="{
+                                path: '/StorePolicies',
+                                parameters: {
+                                    $filter: 'IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null',
+                                    $orderby: 'SortOrder,Title'
+                                }
+                            }"
+                        >
+                            <columns>
+                                <Column>
+                                    <Text text="{i18n>policyTitle}" />
+                                </Column>
+                                <Column minScreenWidth="Tablet" demandPopin="true">
+                                    <Text text="{i18n>policyType}" />
+                                </Column>
+                                <Column hAlign="Center" minScreenWidth="Tablet" demandPopin="true">
+                                    <Text text="{i18n>status}" />
+                                </Column>
+                                <Column width="6rem" />
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <ObjectIdentifier title="{Title}" text="{= ${path: 'IsActiveEntity', targetType: 'any'} ? '' : ${i18n>draft} }" />
+                                        <Text text="{parts: ['Type'], formatter: '.formatter.policyType}'" />
+                                        <ObjectStatus
+                                            text="{= ${path: 'Active', targetType: 'any'} ? ${i18n>active} : ${i18n>inactive} }"
+                                            state="{= ${path: 'Active', targetType: 'any'} ? 'Success' : 'None' }"
+                                        />
+                                        <HBox justifyContent="End">
+                                            <Button icon="sap-icon://edit" type="Transparent" tooltip="{i18n>edit}" press=".policies.onEditPolicy" />
+                                            <Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>delete}" press=".policies.onDeletePolicy" />
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+
                     <IconTabFilter key="promotions" icon="sap-icon://lead" text="{i18n>promotionsTab}">
                         <Toolbar style="Clear">
                             <ToolbarSpacer />

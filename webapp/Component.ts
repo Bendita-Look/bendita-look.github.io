@@ -16,6 +16,7 @@ import Environment from "./util/Environment";
 import { isAuthenticationError, isAuthorizationError, isBackendUnavailableError, isSessionExpiredError } from "./util/http";
 import { getBackendErrorMessage } from "./util/feedback";
 import StoreService from "./service/StoreService";
+import PolicyService from "./service/PolicyService";
 
 const ADMIN_ROUTE = "admin";
 const LOGIN_ROUTE = "login";
@@ -90,8 +91,18 @@ export default class Component extends BaseComponent {
 
     public async refreshStoreInfo(): Promise<void> {
         try {
-            const storeInfo = await new StoreService(this.getModel("catalog") as ODataModel).storeInfo();
+            const catalogModel = this.getModel("catalog") as ODataModel;
+            const storeInfo = await new StoreService(catalogModel).storeInfo();
             (this.getModel("store") as JSONModel).setData(storeInfo);
+        } catch (error) {
+            if (isBackendUnavailableError(error)) {
+                this.notifyBackendUnavailable();
+            }
+        }
+
+        try {
+            const policies = await new PolicyService(this.getModel("catalog") as ODataModel).list();
+            (this.getModel("store") as JSONModel).setProperty("/Policies", policies);
         } catch (error) {
             if (isBackendUnavailableError(error)) {
                 this.notifyBackendUnavailable();

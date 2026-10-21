@@ -2,6 +2,9 @@ import Controller from "sap/ui/core/mvc/Controller";
 import UIComponent from "sap/ui/core/UIComponent";
 import History from "sap/ui/core/routing/History";
 import type Router from "sap/ui/core/routing/Router";
+import type Event from "sap/ui/base/Event";
+import type Control from "sap/ui/core/Control";
+import type Context from "sap/ui/model/odata/v4/Context";
 import type ResourceModel from "sap/ui/model/resource/ResourceModel";
 import type ResourceBundle from "sap/base/i18n/ResourceBundle";
 import type ODataModel from "sap/ui/model/odata/v4/ODataModel";
@@ -55,6 +58,17 @@ export default abstract class BaseController extends Controller {
 
     public onOpenAdmin(): void {
         this.navTo("admin");
+    }
+
+    public onOpenPolicy(event: Event): void {
+        const source = event.getSource() as Control & { getBindingContext?: (name?: string) => Context | undefined };
+        const context = source.getBindingContext?.("store");
+        const policy = context?.getObject() as { Slug?: string | null; Type?: string; ID?: string } | undefined;
+        const key = policy?.Slug || policy?.Type || policy?.ID;
+
+        if (key) {
+            this.navTo("policy", { type: key });
+        }
     }
 
     /**

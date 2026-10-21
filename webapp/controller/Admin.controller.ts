@@ -5,6 +5,7 @@ import BaseController from "./BaseController";
 import OrdersSection from "./admin/OrdersSection";
 import ProductsSection from "./admin/ProductsSection";
 import CategoriesSection from "./admin/CategoriesSection";
+import PoliciesSection from "./admin/PoliciesSection";
 import BackupSection from "./admin/BackupSection";
 import ReportsSection from "./admin/ReportsSection";
 import SettingsSection from "./admin/SettingsSection";
@@ -32,6 +33,8 @@ export default class Admin extends BaseController {
     public readonly products = new ProductsSection(this);
 
     public readonly categories = new CategoriesSection(this);
+
+    public readonly policies = new PoliciesSection(this);
 
     public readonly backup = new BackupSection(this);
 
@@ -66,6 +69,7 @@ export default class Admin extends BaseController {
         this.getView()?.setModel(this.orders.filterModel, "ordersFilter");
         this.getView()?.setModel(this.products.filterModel, "productsFilter");
         this.getView()?.setModel(this.categories.model, "category");
+        this.getView()?.setModel(this.policies.model, "policy");
 
         this.getRouter().getRoute("admin")?.attachPatternMatched((event) => this.onRouteMatched(event));
     }

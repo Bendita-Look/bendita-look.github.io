@@ -95,6 +95,11 @@
           "target": "login"
         },
         {
+          "name": "policy",
+          "pattern": "policy/{type}",
+          "target": "policy"
+        },
+        {
           "name": "admin",
           "pattern": "admin/:tab:",
           "target": "admin"
@@ -129,6 +134,11 @@
         "login": {
           "id": "Login",
           "name": "Login",
+          "level": 1
+        },
+        "policy": {
+          "id": "Policy",
+          "name": "Policy",
           "level": 1
         },
         "admin": {
