@@ -58,6 +58,7 @@ export default class Component extends BaseComponent {
         this.setModel(createPwaModel(), "pwa");
         this.setModel(new CartModel(), "cart");
         this.setModel(new JSONModel({}), "store");
+        this.setModel(new JSONModel({ name: "", email: "", busy: false, subscribed: false }), "newsletter");
         this.setModel(this.createODataModel(XsuaaAuthHelper.getConfig().catalogService), "catalog");
 
         void this.refreshStoreInfo();

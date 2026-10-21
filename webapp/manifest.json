@@ -100,6 +100,11 @@
           "target": "policy"
         },
         {
+          "name": "unsubscribe",
+          "pattern": "unsubscribe/{token}",
+          "target": "unsubscribe"
+        },
+        {
           "name": "admin",
           "pattern": "admin/:tab:",
           "target": "admin"
@@ -139,6 +144,11 @@
         "policy": {
           "id": "Policy",
           "name": "Policy",
+          "level": 1
+        },
+        "unsubscribe": {
+          "id": "Unsubscribe",
+          "name": "Unsubscribe",
           "level": 1
         },
         "admin": {

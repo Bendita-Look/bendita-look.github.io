@@ -1230,6 +1230,18 @@
     color: var(--bl-text);
 }
 
+.blFooterNewsletter {
+    flex: 1 1 16rem;
+}
+
+.blNewsletterInput.sapMInputBase {
+    margin-bottom: 0.5rem;
+}
+
+.blNewsletterButton.sapMBtn {
+    margin-top: 0.25rem;
+}
+
 .blPolicy {
     max-width: 52rem;
     margin: 0 auto;
@@ -1250,6 +1262,12 @@
 .blPolicyText.sapMText {
     color: var(--bl-text);
     line-height: 1.7;
+}
+
+.blUnsubscribe {
+    max-width: 34rem;
+    margin: 0 auto;
+    gap: 0.5rem;
 }
 
 .blFooterBottom {

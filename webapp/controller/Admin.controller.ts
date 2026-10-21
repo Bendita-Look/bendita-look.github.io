@@ -6,6 +6,7 @@ import OrdersSection from "./admin/OrdersSection";
 import ProductsSection from "./admin/ProductsSection";
 import CategoriesSection from "./admin/CategoriesSection";
 import PoliciesSection from "./admin/PoliciesSection";
+import NewsletterSection from "./admin/NewsletterSection";
 import BackupSection from "./admin/BackupSection";
 import ReportsSection from "./admin/ReportsSection";
 import SettingsSection from "./admin/SettingsSection";
@@ -22,6 +23,7 @@ import { AuthenticationService } from "../auth/AuthenticationService";
 const DEFAULT_TAB = "orders";
 const REPORTS_TAB = "reports";
 const SETTINGS_TAB = "settings";
+const NEWSLETTER_TAB = "newsletter";
 
 /**
  * @namespace apps.dflc.benditalook.controller
@@ -35,6 +37,8 @@ export default class Admin extends BaseController {
     public readonly categories = new CategoriesSection(this);
 
     public readonly policies = new PoliciesSection(this);
+
+    public readonly newsletter = new NewsletterSection(this);
 
     public readonly backup = new BackupSection(this);
 
@@ -70,6 +74,7 @@ export default class Admin extends BaseController {
         this.getView()?.setModel(this.products.filterModel, "productsFilter");
         this.getView()?.setModel(this.categories.model, "category");
         this.getView()?.setModel(this.policies.model, "policy");
+        this.getView()?.setModel(this.newsletter.model, "newsletter");
 
         this.getRouter().getRoute("admin")?.attachPatternMatched((event) => this.onRouteMatched(event));
     }
@@ -115,6 +120,10 @@ export default class Admin extends BaseController {
 
         if (selectedTab === SETTINGS_TAB) {
             await Promise.all([this.settings.load(), this.emailServer.load()]);
+        }
+
+        if (selectedTab === NEWSLETTER_TAB) {
+            await this.newsletter.load();
         }
     }
 

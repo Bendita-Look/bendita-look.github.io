@@ -19,6 +19,7 @@ import { getBackendErrorMessage } from "../util/feedback";
 import { promptInstall } from "../util/pwa";
 import { isAuthenticationError, isBackendUnavailableError, isSessionExpiredError } from "../util/http";
 import { AuthenticationService } from "../auth/AuthenticationService";
+import NewsletterService from "../service/NewsletterService";
 
 /**
  * @namespace apps.dflc.benditalook.controller
@@ -92,6 +93,36 @@ export default abstract class BaseController extends Controller {
 
     public onContactEmail(): void {
         window.open(formatter.mailtoUrl(this.getStoreModel().getProperty("/ContactEmail") as string), "_self");
+    }
+
+    /**
+     * Inscreve o visitante na newsletter usando o email digitado no rodapé.
+     * Mostra a mensagem devolvida pelo backend (já inscrito, sucesso, etc.).
+     */
+    public async onNewsletterSubscribe(): Promise<void> {
+        const model = this.getAppComponent().getModel("newsletter") as JSONModel;
+        const name = ((model.getProperty("/name") as string) ?? "").trim();
+        const email = ((model.getProperty("/email") as string) ?? "").trim();
+
+        if (!email) {
+            MessageBox.error(this.getText("newsletterEmailRequired"));
+            return;
+        }
+
+        model.setProperty("/busy", true);
+
+        try {
+            const result = await new NewsletterService(this.getCatalogModel()).subscribe({ Name: name || undefined, Email: email });
+
+            model.setProperty("/subscribed", true);
+            model.setProperty("/name", "");
+            model.setProperty("/email", "");
+            MessageToast.show(result.Message || this.getText("newsletterSubscribedThanks"));
+        } catch (error) {
+            this.handleError(error, "newsletterError");
+        } finally {
+            model.setProperty("/busy", false);
+        }
     }
 
     public onOpenInstagram(): void {
