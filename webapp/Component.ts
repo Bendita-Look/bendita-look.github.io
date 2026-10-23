@@ -3,6 +3,7 @@ import ODataModel from "sap/ui/model/odata/v4/ODataModel";
 import JSONModel from "sap/ui/model/json/JSONModel";
 import type MobileRouter from "sap/m/routing/Router";
 import MessageBox from "sap/m/MessageBox";
+import MessageToast from "sap/m/MessageToast";
 import type ResourceModel from "sap/ui/model/resource/ResourceModel";
 import type ResourceBundle from "sap/base/i18n/ResourceBundle";
 import { createDeviceModel } from "./model/models";
@@ -17,6 +18,10 @@ import { isAuthenticationError, isAuthorizationError, isBackendUnavailableError,
 import { getBackendErrorMessage } from "./util/feedback";
 import StoreService from "./service/StoreService";
 import PolicyService from "./service/PolicyService";
+import OrderWatcher from "./service/OrderWatcher";
+import type { WatchedOrder } from "./service/OrderWatcher";
+import { createNotificationModel, showBrowserNotification } from "./util/notifications";
+import { playOrderChime } from "./util/sound";
 import { buildHowToBuySteps } from "./model/howToBuy";
 
 const ADMIN_ROUTE = "admin";
@@ -40,6 +45,8 @@ export default class Component extends BaseComponent {
 
     private backendUnavailableShown = false;
 
+    private watcherListenerAttached = false;
+
     public init(): void {
         super.init();
 
@@ -52,11 +59,13 @@ export default class Component extends BaseComponent {
         AuthenticationService.initialize(AuthenticatedProviderFactory.create());
         AuthenticationService.onSessionExpired(() => this.handleSessionExpired());
         AuthenticationService.onAuthError((message) => this.handleAuthError(message));
+        AuthenticationService.onAuthChanged(() => void this.syncOrderWatcher());
 
         this.registerGlobalErrorHandlers();
 
         this.setModel(createDeviceModel(), "device");
         this.setModel(createPwaModel(), "pwa");
+        this.setModel(createNotificationModel(), "notify");
         this.setModel(new CartModel(), "cart");
         this.setModel(new JSONModel({}), "store");
         this.setModel(new JSONModel({ name: "", email: "", busy: false, subscribed: false }), "newsletter");
@@ -64,6 +73,7 @@ export default class Component extends BaseComponent {
         this.setModel(this.createODataModel(XsuaaAuthHelper.getConfig().catalogService), "catalog");
 
         void this.refreshStoreInfo();
+        void this.syncOrderWatcher();
 
         const router = this.getRouter() as MobileRouter;
 
@@ -71,6 +81,34 @@ export default class Component extends BaseComponent {
         router.initialize();
 
         await this.completeLoginRedirect();
+    }
+
+    /** Liga/desliga o vigia de pedidos conforme a sessão e registra o aviso de novos pedidos. */
+    private async syncOrderWatcher(): Promise<void> {
+        const watcher = OrderWatcher.getInstance();
+
+        if (!this.watcherListenerAttached) {
+            watcher.onOrders((orders) => this.alertNewOrders(orders));
+            this.watcherListenerAttached = true;
+        }
+
+        await watcher.sync();
+    }
+
+    /** Avisa o administrador: som, notificação do navegador e aviso interno na tela. */
+    private alertNewOrders(orders: WatchedOrder[]): void {
+        const first = orders[0];
+        const count = orders.length;
+        const title = count > 1 ? this.getText("orderAlertTitlePlural", [String(count)]) : this.getText("orderAlertTitle", [String(first.Number)]);
+        const body = count > 1
+            ? this.getText("orderAlertBodyPlural", [String(count)])
+            : this.getText("orderAlertBody", [String(first.Number), first.CustomerName ?? ""]);
+
+        playOrderChime();
+        showBrowserNotification(title, body, `order-${first.ID}`);
+        MessageToast.show(count > 1 ? title : body);
+
+        window.dispatchEvent(new CustomEvent("bl-order-alert", { detail: { orders, title, body } }));
     }
 
     public async ensureAdminModel(): Promise<ODataModel | null> {
