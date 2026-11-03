@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   mirror:
-    if: github.repository == 'DaviCastr/SAP-UI5-BenditaLook'
+    if: github.repository == 'bendita-look.github.io' || github.repository == 'benditalook.github.io'
     runs-on: ubuntu-latest
     env:
       MIRROR_REPOSITORIES: ${{ vars.MIRROR_REPOSITORIES || 'BenditaLook/Store,Bendita-Look/Store' }}
