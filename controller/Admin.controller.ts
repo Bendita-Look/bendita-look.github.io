@@ -21,6 +21,7 @@ import WhatsappComposer from "./admin/WhatsappComposer";
 import StockSection from "./admin/StockSection";
 import { AuthenticationService } from "../auth/AuthenticationService";
 import { requestNotificationPermission } from "../util/notifications";
+import { unlockAudio } from "../util/sound";
 
 const DEFAULT_TAB = "orders";
 const REPORTS_TAB = "reports";
@@ -78,7 +79,7 @@ export default class Admin extends BaseController {
         this.getView()?.setModel(this.products.filterModel, "productsFilter");
         this.getView()?.setModel(this.categories.model, "category");
         this.getView()?.setModel(this.policies.model, "policy");
-        this.getView()?.setModel(this.newsletter.model, "newsletter");
+        this.getView()?.setModel(this.newsletter.model, "newsletterAdmin");
 
         this.getRouter().getRoute("admin")?.attachPatternMatched((event) => this.onRouteMatched(event));
         window.addEventListener("bl-order-alert", this.onOrderAlert);
@@ -96,6 +97,9 @@ export default class Admin extends BaseController {
     /** Pede ao navegador permissão para mostrar notificações de novos pedidos. */
     public async onEnableNotifications(): Promise<void> {
         const model = this.getAppComponent().getModel("notify") as JSONModel;
+
+        unlockAudio();
+
         const permission = await requestNotificationPermission();
 
         model.setProperty("/permission", permission);

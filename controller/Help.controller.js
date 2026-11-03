@@ -1,2 +1,2 @@
-sap.ui.define(["./BaseController"],function(n){"use strict";function t(n){return n&&n.__esModule&&typeof n.default!=="undefined"?n.default:n}const e=t(n);const o=e.extend("apps.dflc.benditalook.controller.Help",{onInit:function n(){},onOpenCatalog:function n(){this.navTo("catalog")}});return o});
+sap.ui.define(["./BaseController"],function(e){"use strict";function n(e){return e&&e.__esModule&&typeof e.default!=="undefined"?e.default:e}const t=n(e);const o=t.extend("apps.dflc.benditalook.controller.Help",{});return o});
 //# sourceMappingURL=Help.controller.js.map

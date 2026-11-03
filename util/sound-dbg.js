@@ -19,6 +19,11 @@ sap.ui.define([], function () {
     return context;
   }
 
+  /** Libera o áudio dentro de um clique do usuário (o navegador bloqueia sons antes disso). */
+  function unlockAudio() {
+    void audioContext()?.resume();
+  }
+
   /** Toca duas notas curtas (dó e sol) para chamar a atenção do administrador. */
   function playOrderChime() {
     const audio = audioContext();
@@ -44,6 +49,7 @@ sap.ui.define([], function () {
   var __exports = {
     __esModule: true
   };
+  __exports.unlockAudio = unlockAudio;
   __exports.playOrderChime = playOrderChime;
   return __exports;
 });

@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/m/MessageToast", "./model/models", "./util/pwa", "./model/CartModel", "./auth/AuthenticationService", "./auth/providers/AuthenticatedProviderFactory", "./auth/providers/XsuaaAuthHelper", "./auth/storage/SessionStorage", "./util/Environment", "./util/http", "./util/feedback", "./service/StoreService", "./service/PolicyService", "./service/OrderWatcher", "./util/notifications", "./util/sound", "./model/howToBuy"], function (BaseComponent, ODataModel, JSONModel, MessageBox, MessageToast, ___model_models, ___util_pwa, __CartModel, ___auth_AuthenticationService, ___auth_providers_AuthenticatedProviderFactory, ___auth_providers_XsuaaAuthHelper, ___auth_storage_SessionStorage, __Environment, ___util_http, ___util_feedback, __StoreService, __PolicyService, __OrderWatcher, ___util_notifications, ___util_sound, ___model_howToBuy) {
+sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/m/MessageToast", "./model/models", "./util/pwa", "./model/CartModel", "./auth/AuthenticationService", "./auth/providers/AuthenticatedProviderFactory", "./auth/providers/XsuaaAuthHelper", "./auth/storage/SessionStorage", "./util/Environment", "./util/http", "./util/feedback", "./service/StoreService", "./service/OrderWatcher", "./util/notifications", "./util/sound", "./model/howToBuy"], function (BaseComponent, ODataModel, JSONModel, MessageBox, MessageToast, ___model_models, ___util_pwa, __CartModel, ___auth_AuthenticationService, ___auth_providers_AuthenticatedProviderFactory, ___auth_providers_XsuaaAuthHelper, ___auth_storage_SessionStorage, __Environment, ___util_http, ___util_feedback, __StoreService, __OrderWatcher, ___util_notifications, ___util_sound, ___model_howToBuy) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -18,7 +18,6 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
   const isSessionExpiredError = ___util_http["isSessionExpiredError"];
   const getBackendErrorMessage = ___util_feedback["getBackendErrorMessage"];
   const StoreService = _interopRequireDefault(__StoreService);
-  const PolicyService = _interopRequireDefault(__PolicyService);
   const OrderWatcher = _interopRequireDefault(__OrderWatcher);
   const createNotificationModel = ___util_notifications["createNotificationModel"];
   const showBrowserNotification = ___util_notifications["showBrowserNotification"];
@@ -74,7 +73,7 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
       await this.completeLoginRedirect();
     },
     /** Liga/desliga o vigia de pedidos conforme a sessão e registra o aviso de novos pedidos. */syncOrderWatcher: async function _syncOrderWatcher() {
-      const watcher = OrderWatcher.getInstance();
+      const watcher = OrderWatcher.getInstance(() => this.ensureAdminModel());
       if (!this.watcherListenerAttached) {
         watcher.onOrders(orders => this.alertNewOrders(orders));
         this.watcherListenerAttached = true;
@@ -103,7 +102,11 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
       }
       const accessToken = AuthenticationService.getSession()?.accessToken ?? "";
       const current = this.getModel();
-      if (current && current.getHttpHeaders().Authorization === this.authorizationHeader(accessToken)) {
+      const authorization = this.authorizationHeader(accessToken);
+      if (current && current.getHttpHeaders().Authorization === authorization) {
+        return current;
+      }
+      if (current && authorization && this.updateAuthorization(current, authorization)) {
         return current;
       }
       const model = this.createODataModel(XsuaaAuthHelper.getConfig().adminService, accessToken);
@@ -116,14 +119,6 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
         const catalogModel = this.getModel("catalog");
         const storeInfo = await new StoreService(catalogModel).storeInfo();
         this.getModel("store").setData(storeInfo);
-      } catch (error) {
-        if (isBackendUnavailableError(error)) {
-          this.notifyBackendUnavailable();
-        }
-      }
-      try {
-        const policies = await new PolicyService(this.getModel("catalog")).list();
-        this.getModel("store").setProperty("/Policies", policies);
       } catch (error) {
         if (isBackendUnavailableError(error)) {
           this.notifyBackendUnavailable();
@@ -198,6 +193,17 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
         }
       });
       return model;
+    },
+    // Troca só o token do modelo existente, preservando rascunhos abertos; false faz o chamador recriar o modelo.
+    updateAuthorization: function _updateAuthorization(model, authorization) {
+      try {
+        model.changeHttpHeaders({
+          Authorization: authorization
+        });
+        return true;
+      } catch {
+        return false;
+      }
     },
     authorizationHeader: function _authorizationHeader(accessToken) {
       return accessToken ? `Bearer ${accessToken}` : undefined;

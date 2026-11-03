@@ -27,7 +27,8 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/Filter", "sap/ui/model/Filt
     stateModel = new JSONModel({
       selectedCount: 0,
       restoreStock: true,
-      confirmText: ""
+      confirmText: "",
+      deleting: false
     });
     onStatusPress = event => {
       this.filterModel.setProperty("/status", event.getSource().data("status") ?? ALL_STATUSES);
@@ -155,16 +156,22 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/Filter", "sap/ui/model/Filt
     };
     onDeleteOpenOrder = () => this.openDeleteDialog([this.getDialogOrder().ID]);
     onCancelDelete = () => {
+      if (this.stateModel.getProperty("/deleting")) {
+        return;
+      }
       this.deleteDialog?.close();
     };
     onConfirmDelete = async () => {
       const restoreStock = this.stateModel.getProperty("/restoreStock");
       const count = this.deleteIds.length;
+      this.stateModel.setProperty("/deleting", true);
       try {
         await this.controller.runBusy(() => new AdminOrderService(this.controller.getAdminModel()).deleteOrders(this.deleteIds, restoreStock));
         this.afterDelete(count);
       } catch (error) {
         this.controller.handleError(error, "ordersDeleteError");
+      } finally {
+        this.stateModel.setProperty("/deleting", false);
       }
     };
     async changeStatus(status, successKey, delivery) {

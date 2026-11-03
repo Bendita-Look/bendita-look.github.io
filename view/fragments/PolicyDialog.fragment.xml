@@ -11,33 +11,32 @@
         escapeHandler=".policies.onCancelPolicy"
     >
         <content>
-            <form:SimpleForm editable="true" layout="ColumnLayout">
-                <Label text="{i18n>policyType}" required="true" />
-                <VBox>
-                    <Select
-                        selectedKey="{policy>/selectedType}"
-                        change=".policies.onTypeChange"
-                        width="100%"
-                    >
-                        <items>
-                            <core:Item key="RETURN" text="{i18n>policyType.RETURN}" />
-                            <core:Item key="EXCHANGE" text="{i18n>policyType.EXCHANGE}" />
-                            <core:Item key="PRIVACY" text="{i18n>policyType.PRIVACY}" />
-                            <core:Item key="DELIVERY" text="{i18n>policyType.DELIVERY}" />
-                            <core:Item key="TERMS" text="{i18n>policyType.TERMS}" />
-                            <core:Item key="OTHER" text="{i18n>policyType.OTHER}" />
-                            <core:Item key="CUSTOM" text="{i18n>policyType.CUSTOM}" />
-                        </items>
-                    </Select>
-                    <Input
-                        value="{policy>/freeType}"
-                        visible="{policy>/isFreeType}"
-                        maxLength="20"
-                        placeholder="{i18n>policyTypeFreePlaceholder}"
-                        class="sapUiSmallMarginTop"
-                        change=".policies.onFreeTypeChange"
-                    />
-                </VBox>
+            <form:SimpleForm id="policyForm" editable="true" layout="ColumnLayout">
+                <Label text="{i18n>policyType}" required="true" labelFor="policyTypeSelect" />
+                <Select
+                    id="policyTypeSelect"
+                    selectedKey="{policy>/selectedType}"
+                    change=".policies.onTypeChange"
+                    width="100%"
+                >
+                    <items>
+                        <core:Item key="RETURN" text="{i18n>policyType.RETURN}" />
+                        <core:Item key="EXCHANGE" text="{i18n>policyType.EXCHANGE}" />
+                        <core:Item key="PRIVACY" text="{i18n>policyType.PRIVACY}" />
+                        <core:Item key="DELIVERY" text="{i18n>policyType.DELIVERY}" />
+                        <core:Item key="TERMS" text="{i18n>policyType.TERMS}" />
+                        <core:Item key="OTHER" text="{i18n>policyType.OTHER}" />
+                        <core:Item key="CUSTOM" text="{i18n>policyType.CUSTOM}" />
+                    </items>
+                </Select>
+                <Label text="{i18n>policyTypeFree}" labelFor="policyFreeTypeInput" visible="{policy>/isFreeType}" />
+                <Input
+                    id="policyFreeTypeInput"
+                    value="{policy>/freeType}"
+                    visible="{policy>/isFreeType}"
+                    maxLength="20"
+                    placeholder="{i18n>policyTypeFreePlaceholder}"
+                />
                 <Label text="{i18n>policyTitle}" required="true" />
                 <Input value="{Title}" maxLength="120" />
                 <Label text="{i18n>policySlug}" />

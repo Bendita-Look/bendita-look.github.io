@@ -1,65 +1,87 @@
-sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../service/PolicyService"], function (JSONModel, __BaseController, __PolicyService) {
+sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/model/Filter", "sap/ui/model/FilterOperator", "sap/ui/model/Sorter", "./BaseController"], function (JSONModel, Filter, FilterOperator, Sorter, __BaseController) {
   "use strict";
 
   function _interopRequireDefault(obj) {
     return obj && obj.__esModule && typeof obj.default !== "undefined" ? obj.default : obj;
   }
   const BaseController = _interopRequireDefault(__BaseController);
-  const PolicyService = _interopRequireDefault(__PolicyService);
+  const INITIAL_STATE = {
+    hasSelection: false,
+    isEmpty: false
+  };
+  const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   /**
    * @namespace apps.dflc.benditalook.controller
    */
   const Policy = BaseController.extend("apps.dflc.benditalook.controller.Policy", {
     onInit: function _onInit() {
-      this.policyModel = new JSONModel(this.emptyState());
+      this.policyModel = new JSONModel({
+        ...INITIAL_STATE
+      });
       this.getView()?.setModel(this.policyModel, "policy");
-      this.getRouter().getRoute("policy")?.attachPatternMatched(event => this.onRouteMatched(event));
+      this.getRouter().getRoute("policy")?.attachPatternMatched(event => void this.onRouteMatched(event));
     },
-    onPolicyPress: function _onPolicyPress(event) {
-      const policy = event.getSource().getBindingContext("policy")?.getObject();
-      this.showPolicy(policy);
+    onPolicyListUpdated: function _onPolicyListUpdated(event) {
+      this.policyModel.setProperty("/isEmpty", event.getParameter("actual") === 0);
     },
-    onPolicySelect: function _onPolicySelect(event) {
-      const policy = event.getParameter("listItem")?.getBindingContext("policy")?.getObject();
-      if (policy) {
-        this.showPolicy(policy);
-      }
+    onBackToList: function _onBackToList() {
+      this.navTo("policy", {});
     },
     onRouteMatched: async function _onRouteMatched(event) {
       const {
         type
       } = event.getParameter("arguments");
-      this.policyModel.setData(this.emptyState());
+      this.policyModel.setProperty("/hasSelection", false);
+      this.policyContent().unbindElement("catalog");
+      if (type) {
+        await this.selectPolicy(decodeURIComponent(type).trim());
+      }
+    },
+    selectPolicy: async function _selectPolicy(key) {
       try {
-        const all = await this.runBusy(() => new PolicyService(this.getCatalogModel()).list());
-        this.policyModel.setProperty("/all", all);
-        this.policyModel.setProperty("/loaded", true);
-        const selected = this.findPolicy(all, type);
-        if (selected) {
-          this.showPolicy(selected);
+        const path = await this.runBusy(() => this.findPolicyPath(key));
+        if (path) {
+          this.showPolicy(path);
         }
       } catch (error) {
         this.handleError(error, "policiesLoadError");
       }
     },
-    findPolicy: function _findPolicy(policies, type) {
-      if (!type) {
-        return policies.length === 1 ? policies[0] : undefined;
+    findPolicyPath: async function _findPolicyPath(key) {
+      if (GUID_PATTERN.test(key)) {
+        return `/StorePolicies(${key})`;
       }
-      const normalized = decodeURIComponent(type).trim().toLowerCase();
-      return policies.find(policy => (policy.Slug ?? "").toLowerCase() === normalized) ?? policies.find(policy => policy.Type.toLowerCase() === normalized) ?? policies.find(policy => policy.ID.toLowerCase() === normalized);
+      const binding = this.getCatalogModel().bindList("/StorePolicies", undefined, [new Sorter("SortOrder")], [new Filter({
+        filters: [new Filter({
+          path: "Slug",
+          operator: FilterOperator.EQ,
+          value1: key,
+          caseSensitive: false
+        }), new Filter({
+          path: "Type",
+          operator: FilterOperator.EQ,
+          value1: key,
+          caseSensitive: false
+        })],
+        and: false
+      })]);
+      try {
+        const contexts = await binding.requestContexts(0, 1);
+        return contexts.length ? contexts[0].getPath() : undefined;
+      } finally {
+        binding.destroy();
+      }
     },
-    showPolicy: function _showPolicy(policy) {
-      this.policyModel.setProperty("/policy", policy);
+    showPolicy: function _showPolicy(path) {
+      this.policyContent().bindElement({
+        path,
+        model: "catalog"
+      });
       this.policyModel.setProperty("/hasSelection", true);
     },
-    emptyState: function _emptyState() {
-      return {
-        loaded: false,
-        all: [],
-        policy: null,
-        hasSelection: false
-      };
+    policyContent: function _policyContent() {
+      return this.byId("policyContent");
     }
   });
   return Policy;

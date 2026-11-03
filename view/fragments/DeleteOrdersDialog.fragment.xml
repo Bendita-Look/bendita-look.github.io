@@ -7,6 +7,7 @@
         title="{i18n>deleteOrdersTitle}"
         contentWidth="28rem"
         class="blDialog"
+        escapeHandler=".orders.onCancelDelete"
     >
         <content>
             <VBox class="sapUiSmallMargin">
@@ -21,8 +22,19 @@
             </VBox>
         </content>
         <buttons>
-            <Button id="confirmDeleteOrdersButton" text="{i18n>deleteOrders}" type="Reject" press=".orders.onConfirmDelete" />
-            <Button id="cancelDeleteOrdersButton" text="{i18n>cancel}" press=".orders.onCancelDelete" />
+            <Button
+                id="confirmDeleteOrdersButton"
+                text="{i18n>deleteOrders}"
+                type="Reject"
+                enabled="{= !${ordersState>/deleting} }"
+                press=".orders.onConfirmDelete"
+            />
+            <Button
+                id="cancelDeleteOrdersButton"
+                text="{i18n>cancel}"
+                enabled="{= !${ordersState>/deleting} }"
+                press=".orders.onCancelDelete"
+            />
         </buttons>
     </Dialog>
 </core:FragmentDefinition>

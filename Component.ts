@@ -17,7 +17,6 @@ import Environment from "./util/Environment";
 import { isAuthenticationError, isAuthorizationError, isBackendUnavailableError, isSessionExpiredError } from "./util/http";
 import { getBackendErrorMessage } from "./util/feedback";
 import StoreService from "./service/StoreService";
-import PolicyService from "./service/PolicyService";
 import OrderWatcher from "./service/OrderWatcher";
 import type { WatchedOrder } from "./service/OrderWatcher";
 import { createNotificationModel, showBrowserNotification } from "./util/notifications";
@@ -85,7 +84,7 @@ export default class Component extends BaseComponent {
 
     /** Liga/desliga o vigia de pedidos conforme a sessão e registra o aviso de novos pedidos. */
     private async syncOrderWatcher(): Promise<void> {
-        const watcher = OrderWatcher.getInstance();
+        const watcher = OrderWatcher.getInstance(() => this.ensureAdminModel());
 
         if (!this.watcherListenerAttached) {
             watcher.onOrders((orders) => this.alertNewOrders(orders));
@@ -119,7 +118,13 @@ export default class Component extends BaseComponent {
         const accessToken = AuthenticationService.getSession()?.accessToken ?? "";
         const current = this.getModel() as ODataModel | undefined;
 
-        if (current && current.getHttpHeaders().Authorization === this.authorizationHeader(accessToken)) {
+        const authorization = this.authorizationHeader(accessToken);
+
+        if (current && current.getHttpHeaders().Authorization === authorization) {
+            return current;
+        }
+
+        if (current && authorization && this.updateAuthorization(current, authorization)) {
             return current;
         }
 
@@ -135,15 +140,6 @@ export default class Component extends BaseComponent {
             const catalogModel = this.getModel("catalog") as ODataModel;
             const storeInfo = await new StoreService(catalogModel).storeInfo();
             (this.getModel("store") as JSONModel).setData(storeInfo);
-        } catch (error) {
-            if (isBackendUnavailableError(error)) {
-                this.notifyBackendUnavailable();
-            }
-        }
-
-        try {
-            const policies = await new PolicyService(this.getModel("catalog") as ODataModel).list();
-            (this.getModel("store") as JSONModel).setProperty("/Policies", policies);
         } catch (error) {
             if (isBackendUnavailableError(error)) {
                 this.notifyBackendUnavailable();
@@ -232,6 +228,17 @@ export default class Component extends BaseComponent {
         });
 
         return model;
+    }
+
+    // Troca só o token do modelo existente, preservando rascunhos abertos; false faz o chamador recriar o modelo.
+    private updateAuthorization(model: ODataModel, authorization: string): boolean {
+        try {
+            model.changeHttpHeaders({ Authorization: authorization });
+
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     private authorizationHeader(accessToken: string): string | undefined {

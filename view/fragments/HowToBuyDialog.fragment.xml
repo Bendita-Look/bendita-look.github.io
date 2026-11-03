@@ -11,13 +11,14 @@
     >
         <content>
             <VBox class="blHowToBuy">
-                <Text text="{i18n>howToBuyIntro}" class="blMuted sapUiSmallMarginBottom" wrapping="true" />
+                <Text text="{i18n>howToBuyIntro}" class="blMuted" wrapping="true" />
 
                 <Carousel
                     id="howToBuyCarousel"
-                    height="18rem"
+                    height="20rem"
                     loop="false"
                     showPageIndicator="true"
+                    pageChanged=".onHowToBuyPageChanged"
                     pages="{
                         path: 'howToBuy>/steps',
                         templateShareable: false
@@ -27,13 +28,47 @@
                         <core:Icon src="{howToBuy>icon}" class="blHowToBuyIcon" />
                         <Title text="{howToBuy>title}" level="H3" class="blHowToBuyStepTitle" />
                         <Text text="{howToBuy>text}" textAlign="Center" wrapping="true" class="blMuted" />
+                        <Button
+                            text="{howToBuy>actionText}"
+                            visible="{= !!${howToBuy>actionText} }"
+                            press=".onHowToBuyAction"
+                            class="sapUiSmallMarginTop"
+                        />
                     </VBox>
                 </Carousel>
+
+                <Text
+                    text="{parts: [{path: 'howToBuy>/currentIndex'}, {path: 'howToBuy>/steps/length'}], formatter: '.formatStepCounter'}"
+                    class="blMuted"
+                />
+
+                <HBox justifyContent="Center" class="sapUiSmallMarginTop">
+                    <Link text="{i18n>howToBuySeeFull}" press=".onOpenHelp" />
+                </HBox>
             </VBox>
         </content>
         <buttons>
-            <Button text="{i18n>howToBuySeeFull}" press=".onOpenHelp" />
-            <Button text="{i18n>close}" type="Emphasized" press=".onCloseHowToBuy" />
+            <Button
+                id="howToBuyPrevious"
+                text="{i18n>howToBuyPrevious}"
+                enabled="{= ${howToBuy>/currentIndex} > 0 }"
+                press=".onPreviousStep"
+            />
+            <Button
+                id="howToBuyNext"
+                text="{i18n>howToBuyNext}"
+                type="Emphasized"
+                visible="{= ${howToBuy>/currentIndex} &lt; ${howToBuy>/steps/length} - 1 }"
+                press=".onNextStep"
+            />
+            <Button
+                id="howToBuyStart"
+                text="{i18n>howToBuyStart}"
+                type="Emphasized"
+                visible="{= ${howToBuy>/currentIndex} >= ${howToBuy>/steps/length} - 1 }"
+                press=".onStartShopping"
+            />
+            <Button id="howToBuyClose" text="{i18n>close}" press=".onCloseHowToBuy" />
         </buttons>
     </Dialog>
 </core:FragmentDefinition>

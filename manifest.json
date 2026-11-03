@@ -102,7 +102,7 @@
 				},
 				{
 					"name": "policy",
-					"pattern": "policy/{type}",
+					"pattern": "policy/:type:",
 					"target": "policy"
 				},
 				{
@@ -155,17 +155,17 @@
 				"policy": {
 					"id": "Policy",
 					"name": "Policy",
-					"level": 1
+					"level": 2
 				},
 				"help": {
 					"id": "Help",
 					"name": "Help",
-					"level": 1
+					"level": 2
 				},
 				"unsubscribe": {
 					"id": "Unsubscribe",
 					"name": "Unsubscribe",
-					"level": 1
+					"level": 2
 				},
 				"admin": {
 					"id": "Admin",

@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "./BaseController", "./admin/OrdersSection", "./admin/ProductsSection", "./admin/CategoriesSection", "./admin/PoliciesSection", "./admin/NewsletterSection", "./admin/BackupSection", "./admin/ReportsSection", "./admin/SettingsSection", "./admin/EmailServerSection", "./admin/PromotionsSection", "./admin/StoreSaleSection", "./admin/OrderEditSection", "./admin/OrderReturnSection", "./admin/ProductPicker", "./admin/WhatsappComposer", "./admin/StockSection", "../auth/AuthenticationService", "../util/notifications"], function (JSONModel, MessageBox, __BaseController, __OrdersSection, __ProductsSection, __CategoriesSection, __PoliciesSection, __NewsletterSection, __BackupSection, __ReportsSection, __SettingsSection, __EmailServerSection, __PromotionsSection, __StoreSaleSection, __OrderEditSection, __OrderReturnSection, __ProductPicker, __WhatsappComposer, __StockSection, ___auth_AuthenticationService, ___util_notifications) {
+sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "./BaseController", "./admin/OrdersSection", "./admin/ProductsSection", "./admin/CategoriesSection", "./admin/PoliciesSection", "./admin/NewsletterSection", "./admin/BackupSection", "./admin/ReportsSection", "./admin/SettingsSection", "./admin/EmailServerSection", "./admin/PromotionsSection", "./admin/StoreSaleSection", "./admin/OrderEditSection", "./admin/OrderReturnSection", "./admin/ProductPicker", "./admin/WhatsappComposer", "./admin/StockSection", "../auth/AuthenticationService", "../util/notifications", "../util/sound"], function (JSONModel, MessageBox, __BaseController, __OrdersSection, __ProductsSection, __CategoriesSection, __PoliciesSection, __NewsletterSection, __BackupSection, __ReportsSection, __SettingsSection, __EmailServerSection, __PromotionsSection, __StoreSaleSection, __OrderEditSection, __OrderReturnSection, __ProductPicker, __WhatsappComposer, __StockSection, ___auth_AuthenticationService, ___util_notifications, ___util_sound) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -23,6 +23,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "./BaseControl
   const StockSection = _interopRequireDefault(__StockSection);
   const AuthenticationService = ___auth_AuthenticationService["AuthenticationService"];
   const requestNotificationPermission = ___util_notifications["requestNotificationPermission"];
+  const unlockAudio = ___util_sound["unlockAudio"];
   const DEFAULT_TAB = "orders";
   const REPORTS_TAB = "reports";
   const SETTINGS_TAB = "settings";
@@ -70,7 +71,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "./BaseControl
       this.getView()?.setModel(this.products.filterModel, "productsFilter");
       this.getView()?.setModel(this.categories.model, "category");
       this.getView()?.setModel(this.policies.model, "policy");
-      this.getView()?.setModel(this.newsletter.model, "newsletter");
+      this.getView()?.setModel(this.newsletter.model, "newsletterAdmin");
       this.getRouter().getRoute("admin")?.attachPatternMatched(event => this.onRouteMatched(event));
       window.addEventListener("bl-order-alert", this.onOrderAlert);
     },
@@ -79,6 +80,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "./BaseControl
     },
     /** Pede ao navegador permissão para mostrar notificações de novos pedidos. */onEnableNotifications: async function _onEnableNotifications() {
       const model = this.getAppComponent().getModel("notify");
+      unlockAudio();
       const permission = await requestNotificationPermission();
       model.setProperty("/permission", permission);
       if (permission === "granted") {

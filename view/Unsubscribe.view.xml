@@ -25,7 +25,7 @@
 
                 <MessageStrip
                     text="{unsubscribe>/message}"
-                    type="{unsubscribe>/state === 'done' ? 'Success' : 'Error'}"
+                    type="{= ${unsubscribe>/state} === 'done' ? 'Success' : 'Error' }"
                     showIcon="true"
                     visible="{= ${unsubscribe>/state} === 'done' || ${unsubscribe>/state} === 'error' }"
                     class="sapUiMediumMarginTop"

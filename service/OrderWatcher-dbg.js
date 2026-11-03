@@ -1,17 +1,17 @@
-sap.ui.define(["sap/ui/util/Storage", "../auth/AuthenticationService", "../auth/providers/XsuaaAuthHelper", "../util/http"], function (Storage, ___auth_AuthenticationService, ___auth_providers_XsuaaAuthHelper, ___util_http) {
+sap.ui.define(["sap/ui/util/Storage", "sap/ui/model/Filter", "sap/ui/model/FilterOperator", "sap/ui/model/Sorter", "../auth/AuthenticationService", "../util/http"], function (Storage, Filter, FilterOperator, Sorter, ___auth_AuthenticationService, ___util_http) {
   "use strict";
 
   const AuthenticationService = ___auth_AuthenticationService["AuthenticationService"];
-  const XsuaaAuthHelper = ___auth_providers_XsuaaAuthHelper["XsuaaAuthHelper"];
-  const buildAuthHeaders = ___util_http["buildAuthHeaders"];
+  const isAuthenticationError = ___util_http["isAuthenticationError"];
+  const isAuthorizationError = ___util_http["isAuthorizationError"];
   const POLL_INTERVAL = 30_000;
   const FIRST_RUN_LOOKBACK = 5 * 60 * 1000;
   const MAX_PER_POLL = 20;
   const STORAGE_KEY = "orders.watermark";
   /**
    * Vigia novos pedidos enquanto o administrador está logado — não importa em
-   * qual tela ele esteja. Faz polling no serviço administrativo e entrega os
-   * pedidos novos para quem escuta (o Component cuida do som e do aviso).
+   * qual tela ele esteja. Faz polling no serviço administrativo (OData V4) e entrega
+   * os pedidos novos para quem escuta (o Component cuida do som e do aviso).
    *
    * A marca d'água (createdAt do último pedido visto) fica no localStorage,
    * assim o vigia não repete avisos entre recargas.
@@ -22,12 +22,13 @@ sap.ui.define(["sap/ui/util/Storage", "../auth/AuthenticationService", "../auth/
     polling = false;
     listeners = new Set();
     storage = new Storage(Storage.Type.local, "benditaLook");
-    constructor() {
+    constructor(resolveAdminModel) {
+      this.resolveAdminModel = resolveAdminModel;
       this.watermark = this.storedWatermark() ?? new Date(Date.now() - FIRST_RUN_LOOKBACK).toISOString();
     }
-    static getInstance() {
+    static getInstance(resolveAdminModel) {
       if (!this.instance) {
-        this.instance = new OrderWatcher();
+        this.instance = new OrderWatcher(resolveAdminModel);
       }
       return this.instance;
     }
@@ -51,17 +52,27 @@ sap.ui.define(["sap/ui/util/Storage", "../auth/AuthenticationService", "../auth/
       this.started = true;
       void this.poll();
       this.timer = setInterval(() => void this.poll(), POLL_INTERVAL);
+      document.addEventListener("visibilitychange", this.onVisibilityChange);
     }
     stop() {
       this.started = false;
       clearInterval(this.timer);
       this.timer = undefined;
+      document.removeEventListener("visibilitychange", this.onVisibilityChange);
     }
+
+    /** Ao voltar para a aba, consulta na hora em vez de esperar o próximo ciclo. */
+    onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void this.poll();
+      }
+    };
     async poll() {
-      if (this.polling) {
+      if (this.polling || document.visibilityState === "hidden") {
         return;
       }
       this.polling = true;
+      this.watermark = this.storedWatermark() ?? this.watermark;
       try {
         const orders = await this.fetchNewOrders();
         if (orders.length) {
@@ -70,27 +81,39 @@ sap.ui.define(["sap/ui/util/Storage", "../auth/AuthenticationService", "../auth/
           this.storeWatermark(this.watermark);
           this.listeners.forEach(listener => listener(orders));
         }
-      } catch {
-        // Sem rede/sessão: tenta de novo no próximo ciclo.
+      } catch (error) {
+        this.handleFailure(error);
       } finally {
         this.polling = false;
       }
     }
+
+    // 401/403: para o timer. Só a sessão expirada (401) mostra o aviso padrão; outras falhas tentam no próximo ciclo.
+    handleFailure(error) {
+      if (!isAuthorizationError(error)) {
+        return;
+      }
+      this.stop();
+      if (isAuthenticationError(error)) {
+        AuthenticationService.notifySessionExpired();
+      }
+    }
     async fetchNewOrders() {
-      const query = new URLSearchParams({
-        $filter: `createdAt gt ${this.watermark}`,
-        $select: "ID,Number,CustomerName,TotalAmount,createdAt",
-        $orderby: "createdAt asc",
-        $top: String(MAX_PER_POLL)
-      });
-      const response = await fetch(`${XsuaaAuthHelper.getConfig().adminService}Orders?${query.toString()}`, {
-        headers: buildAuthHeaders()
-      });
-      if (!response.ok) {
+      const model = await this.resolveAdminModel();
+      if (!model) {
+        this.stop();
         return [];
       }
-      const payload = await response.json();
-      return payload.value ?? [];
+      const binding = model.bindList("/Orders", undefined, [new Sorter("createdAt")], [new Filter("createdAt", FilterOperator.GT, this.watermark)], {
+        $select: "ID,Number,CustomerName,TotalAmount,createdAt",
+        $$groupId: "$direct"
+      });
+      try {
+        const contexts = await binding.requestContexts(0, MAX_PER_POLL);
+        return contexts.map(context => context.getObject());
+      } finally {
+        binding.destroy();
+      }
     }
     storedWatermark() {
       return this.storage.get(STORAGE_KEY) ?? null;

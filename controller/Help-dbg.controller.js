@@ -11,14 +11,7 @@ sap.ui.define(["./BaseController"], function (__BaseController) {
    *
    * @namespace apps.dflc.benditalook.controller
    */
-  const Help = BaseController.extend("apps.dflc.benditalook.controller.Help", {
-    onInit: function _onInit() {
-      // Nada a carregar: os passos vêm do model "howToBuy" do Component.
-    },
-    onOpenCatalog: function _onOpenCatalog() {
-      this.navTo("catalog");
-    }
-  });
+  const Help = BaseController.extend("apps.dflc.benditalook.controller.Help", {});
   return Help;
 });
 //# sourceMappingURL=Help-dbg.controller.js.map

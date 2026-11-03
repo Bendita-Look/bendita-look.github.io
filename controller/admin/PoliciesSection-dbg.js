@@ -54,10 +54,7 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/json/JSONModel", "../../ser
       try {
         await this.controller.runBusy(async () => {
           const context = this.getDialogContext();
-          if (this.model.getProperty("/isFreeType")) {
-            const freeType = (this.model.getProperty("/freeType") ?? "").trim().toUpperCase();
-            context.setProperty("Type", freeType || "OTHER");
-          }
+          await context.setProperty("Type", this.resolveType());
           await this.draftService().activateDraft(context);
         });
         this.closeDialog();
@@ -87,11 +84,12 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/json/JSONModel", "../../ser
       this.model.setProperty("/isFreeType", false);
       this.model.setProperty("/freeType", "");
     };
-
-    /** Ao digitar um tipo livre, reflete o valor no rótulo do próprio campo. */
-    onFreeTypeChange = event => {
-      this.model.setProperty("/freeType", event.getSource().getValue());
-    };
+    resolveType() {
+      if (this.model.getProperty("/isFreeType")) {
+        return (this.model.getProperty("/freeType") ?? "").trim().toUpperCase() || "OTHER";
+      }
+      return this.model.getProperty("/selectedType") || "OTHER";
+    }
     applyType(value) {
       const known = KNOWN_TYPES.includes(value.toUpperCase());
       const free = value && !known ? value : "";

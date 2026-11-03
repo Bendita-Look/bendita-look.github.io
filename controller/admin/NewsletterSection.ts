@@ -65,6 +65,7 @@ export default class NewsletterSection {
 
         try {
             await this.controller.runBusy(() => context.delete());
+            void this.load();
             this.controller.showToast("subscriberDeleted");
         } catch (error) {
             this.subscribersBinding()?.refresh();

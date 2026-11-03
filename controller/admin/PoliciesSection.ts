@@ -63,12 +63,7 @@ export default class PoliciesSection {
             await this.controller.runBusy(async () => {
                 const context = this.getDialogContext();
 
-                if (this.model.getProperty("/isFreeType")) {
-                    const freeType = (this.model.getProperty("/freeType") as string ?? "").trim().toUpperCase();
-
-                    context.setProperty("Type", freeType || "OTHER");
-                }
-
+                await context.setProperty("Type", this.resolveType());
                 await this.draftService().activateDraft(context);
             });
             this.closeDialog();
@@ -102,10 +97,13 @@ export default class PoliciesSection {
         this.model.setProperty("/freeType", "");
     };
 
-    /** Ao digitar um tipo livre, reflete o valor no rótulo do próprio campo. */
-    public onFreeTypeChange = (event: Event): void => {
-        this.model.setProperty("/freeType", (event.getSource() as Control & { getValue(): string }).getValue());
-    };
+    private resolveType(): string {
+        if (this.model.getProperty("/isFreeType")) {
+            return ((this.model.getProperty("/freeType") as string | undefined) ?? "").trim().toUpperCase() || "OTHER";
+        }
+
+        return (this.model.getProperty("/selectedType") as string | undefined) || "OTHER";
+    }
 
     private applyType(value: string): void {
         const known = KNOWN_TYPES.includes(value.toUpperCase());

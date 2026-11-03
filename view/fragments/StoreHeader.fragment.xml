@@ -48,7 +48,8 @@
                 visible="{= !!${store>/Whatsapp} }"
                 press=".onContactWhatsapp"
                 class="blHeaderAction blHeaderService"
-            />            <Button
+            />
+            <Button
                 icon="sap-icon://cart"
                 text="{i18n>cart}"
                 type="Transparent"

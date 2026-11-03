@@ -50,6 +50,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "../../service
       }
       try {
         await this.controller.runBusy(() => context.delete());
+        void this.load();
         this.controller.showToast("subscriberDeleted");
       } catch (error) {
         this.subscribersBinding()?.refresh();

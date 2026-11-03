@@ -1,4 +1,4 @@
-sap.ui.define([], function () {
+sap.ui.define(["sap/ui/model/Filter", "sap/ui/model/FilterOperator"], function (Filter, FilterOperator) {
   "use strict";
 
   /**
@@ -28,10 +28,16 @@ sap.ui.define([], function () {
       return operation.getBoundContext().getObject();
     }
     async activeCount() {
-      const contexts = await this.model.bindList("/Subscribers", undefined, undefined, undefined, {
-        $filter: "Active eq true"
-      }).requestContexts();
-      return contexts.length;
+      const binding = this.model.bindList("/Subscribers", undefined, undefined, [new Filter("Active", FilterOperator.EQ, true)], {
+        $count: true,
+        $$groupId: "$direct"
+      });
+      try {
+        await binding.requestContexts(0, 1);
+        return binding.getCount() ?? 0;
+      } finally {
+        binding.destroy();
+      }
     }
   }
   return NewsletterService;

@@ -1,7 +1,10 @@
 import Storage from "sap/ui/util/Storage";
+import Filter from "sap/ui/model/Filter";
+import FilterOperator from "sap/ui/model/FilterOperator";
+import Sorter from "sap/ui/model/Sorter";
+import type ODataModel from "sap/ui/model/odata/v4/ODataModel";
 import { AuthenticationService } from "../auth/AuthenticationService";
-import { XsuaaAuthHelper } from "../auth/providers/XsuaaAuthHelper";
-import { buildAuthHeaders } from "../util/http";
+import { isAuthenticationError, isAuthorizationError } from "../util/http";
 
 const POLL_INTERVAL = 30_000;
 const FIRST_RUN_LOOKBACK = 5 * 60 * 1000;
@@ -17,11 +20,12 @@ export interface WatchedOrder {
 }
 
 type OrdersListener = (orders: WatchedOrder[]) => void;
+type AdminModelResolver = () => Promise<ODataModel | null>;
 
 /**
  * Vigia novos pedidos enquanto o administrador está logado — não importa em
- * qual tela ele esteja. Faz polling no serviço administrativo e entrega os
- * pedidos novos para quem escuta (o Component cuida do som e do aviso).
+ * qual tela ele esteja. Faz polling no serviço administrativo (OData V4) e entrega
+ * os pedidos novos para quem escuta (o Component cuida do som e do aviso).
  *
  * A marca d'água (createdAt do último pedido visto) fica no localStorage,
  * assim o vigia não repete avisos entre recargas.
@@ -42,13 +46,13 @@ export default class OrderWatcher {
 
     private readonly storage = new Storage(Storage.Type.local, "benditaLook");
 
-    private constructor() {
+    private constructor(private readonly resolveAdminModel: AdminModelResolver) {
         this.watermark = this.storedWatermark() ?? new Date(Date.now() - FIRST_RUN_LOOKBACK).toISOString();
     }
 
-    public static getInstance(): OrderWatcher {
+    public static getInstance(resolveAdminModel: AdminModelResolver): OrderWatcher {
         if (!this.instance) {
-            this.instance = new OrderWatcher();
+            this.instance = new OrderWatcher(resolveAdminModel);
         }
 
         return this.instance;
@@ -77,20 +81,30 @@ export default class OrderWatcher {
         this.started = true;
         void this.poll();
         this.timer = setInterval(() => void this.poll(), POLL_INTERVAL);
+        document.addEventListener("visibilitychange", this.onVisibilityChange);
     }
 
     private stop(): void {
         this.started = false;
         clearInterval(this.timer);
         this.timer = undefined;
+        document.removeEventListener("visibilitychange", this.onVisibilityChange);
     }
 
+    /** Ao voltar para a aba, consulta na hora em vez de esperar o próximo ciclo. */
+    private readonly onVisibilityChange = (): void => {
+        if (document.visibilityState === "visible") {
+            void this.poll();
+        }
+    };
+
     private async poll(): Promise<void> {
-        if (this.polling) {
+        if (this.polling || document.visibilityState === "hidden") {
             return;
         }
 
         this.polling = true;
+        this.watermark = this.storedWatermark() ?? this.watermark;
 
         try {
             const orders = await this.fetchNewOrders();
@@ -102,32 +116,48 @@ export default class OrderWatcher {
                 this.storeWatermark(this.watermark);
                 this.listeners.forEach((listener) => listener(orders));
             }
-        } catch {
-            // Sem rede/sessão: tenta de novo no próximo ciclo.
+        } catch (error) {
+            this.handleFailure(error);
         } finally {
             this.polling = false;
         }
     }
 
+    // 401/403: para o timer. Só a sessão expirada (401) mostra o aviso padrão; outras falhas tentam no próximo ciclo.
+    private handleFailure(error: unknown): void {
+        if (!isAuthorizationError(error)) {
+            return;
+        }
+
+        this.stop();
+
+        if (isAuthenticationError(error)) {
+            AuthenticationService.notifySessionExpired();
+        }
+    }
+
     private async fetchNewOrders(): Promise<WatchedOrder[]> {
-        const query = new URLSearchParams({
-            $filter: `createdAt gt ${this.watermark}`,
-            $select: "ID,Number,CustomerName,TotalAmount,createdAt",
-            $orderby: "createdAt asc",
-            $top: String(MAX_PER_POLL)
-        });
+        const model = await this.resolveAdminModel();
 
-        const response = await fetch(`${XsuaaAuthHelper.getConfig().adminService}Orders?${query.toString()}`, {
-            headers: buildAuthHeaders()
-        });
-
-        if (!response.ok) {
+        if (!model) {
+            this.stop();
             return [];
         }
 
-        const payload = await response.json() as { value?: WatchedOrder[] };
+        const binding = model.bindList("/Orders", undefined, [new Sorter("createdAt")], [
+            new Filter("createdAt", FilterOperator.GT, this.watermark)
+        ], {
+            $select: "ID,Number,CustomerName,TotalAmount,createdAt",
+            $$groupId: "$direct"
+        });
 
-        return payload.value ?? [];
+        try {
+            const contexts = await binding.requestContexts(0, MAX_PER_POLL);
+
+            return contexts.map((context) => context.getObject() as WatchedOrder);
+        } finally {
+            binding.destroy();
+        }
     }
 
     private storedWatermark(): string | null {

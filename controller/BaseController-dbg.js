@@ -46,8 +46,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
       this.navTo("admin");
     },
     onOpenPolicy: function _onOpenPolicy(event) {
-      const source = event.getSource();
-      const context = source.getBindingContext?.("store");
+      const context = event.getSource().getBindingContext("catalog");
       const policy = context?.getObject();
       const key = policy?.Slug || policy?.Type || policy?.ID;
       if (key) {
@@ -66,7 +65,33 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
       this.howToBuyDialog?.close();
       this.navTo("help");
     },
-    /** Carrega (uma única vez) e abre o diálogo do tutorial. */openHowToBuyDialog: async function _openHowToBuyDialog() {
+    onStartShopping: function _onStartShopping() {
+      this.howToBuyDialog?.close();
+      this.navTo("catalog");
+    },
+    onPreviousStep: function _onPreviousStep() {
+      this.getHowToBuyCarousel()?.previous();
+    },
+    onNextStep: function _onNextStep() {
+      this.getHowToBuyCarousel()?.next();
+    },
+    onHowToBuyPageChanged: function _onHowToBuyPageChanged(event) {
+      const pageId = event.getParameter("newActivePageId");
+      const index = event.getSource().getPages().findIndex(page => page.getId() === pageId);
+      this.getHowToBuyModel().setProperty("/currentIndex", Math.max(index, 0));
+    },
+    onHowToBuyAction: function _onHowToBuyAction(event) {
+      const step = event.getSource().getBindingContext("howToBuy")?.getObject();
+      if (!step?.actionRoute) {
+        return;
+      }
+      this.howToBuyDialog?.close();
+      this.navTo(step.actionRoute, step.actionParams ?? {});
+    },
+    formatStepCounter: function _formatStepCounter(index, total) {
+      return this.getText("howToBuyStepCounter", [(index ?? 0) + 1, total ?? 0]);
+    },
+    /** Carrega (uma única vez) e abre o diálogo do tutorial, sempre a partir do primeiro passo. */openHowToBuyDialog: async function _openHowToBuyDialog() {
       if (!this.howToBuyDialog) {
         this.howToBuyDialog = await Fragment.load({
           id: this.getView()?.getId(),
@@ -75,7 +100,22 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
         });
         this.getView()?.addDependent(this.howToBuyDialog);
       }
+      this.resetHowToBuyStep();
       this.howToBuyDialog.open();
+    },
+    resetHowToBuyStep: function _resetHowToBuyStep() {
+      const carousel = this.getHowToBuyCarousel();
+      const firstPage = carousel?.getPages()[0];
+      if (carousel && firstPage) {
+        carousel.setActivePage(firstPage);
+      }
+      this.getHowToBuyModel().setProperty("/currentIndex", 0);
+    },
+    getHowToBuyCarousel: function _getHowToBuyCarousel() {
+      return Fragment.byId(this.getView()?.getId() ?? "", "howToBuyCarousel");
+    },
+    getHowToBuyModel: function _getHowToBuyModel() {
+      return this.getAppComponent().getModel("howToBuy");
     },
     /**
      * Botão "Instalar app" (visível só no navegador, model "pwa"): abre o prompt
@@ -141,6 +181,15 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
     },
     formatFulfillment: function _formatFulfillment(fulfillment) {
       return fulfillment ? this.getText(`fulfillment.${fulfillment}`) : "";
+    },
+    // Tipos livres sem chave de tradução aparecem como digitados.
+    formatPolicyType: function _formatPolicyType(type) {
+      if (!type) {
+        return "";
+      }
+      const key = `policyType.${type.toUpperCase()}`;
+      const bundle = this.getAppComponent().getModel("i18n").getResourceBundle();
+      return bundle.hasText(key) ? this.getText(key) : type;
     },
     formatBalance: function _formatBalance(balance) {
       const amount = Number(balance ?? 0);

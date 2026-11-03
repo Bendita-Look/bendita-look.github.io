@@ -133,25 +133,6 @@ export default {
             : "";
     },
 
-    policyType(type: string | null | undefined): string {
-        if (!type) {
-            return "";
-        }
-
-        const labels: Record<string, { pt: string; en: string }> = {
-            RETURN: { pt: "Trocas e devoluções", en: "Returns and exchanges" },
-            EXCHANGE: { pt: "Trocas", en: "Exchanges" },
-            PRIVACY: { pt: "Privacidade", en: "Privacy" },
-            DELIVERY: { pt: "Entrega e frete", en: "Delivery and shipping" },
-            TERMS: { pt: "Termos de uso", en: "Terms of use" },
-            OTHER: { pt: "Outros", en: "Other" }
-        };
-
-        const entry = labels[type.toUpperCase()];
-
-        return entry ? (languageTag().startsWith("pt") ? entry.pt : entry.en) : type;
-    },
-
     bannerUrl(bannerId: string | null | undefined, version: string | null | undefined): string {
         return bannerId
             ? `${XsuaaAuthHelper.getConfig().catalogService}StoreBanners(${bannerId})/BannerImage?v=${encodeURIComponent(version ?? "")}`

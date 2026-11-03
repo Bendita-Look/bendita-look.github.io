@@ -8,12 +8,4 @@ import BaseController from "./BaseController";
  */
 export default class Help extends BaseController {
 
-    public onInit(): void {
-        // Nada a carregar: os passos vêm do model "howToBuy" do Component.
-    }
-
-    public onOpenCatalog(): void {
-        this.navTo("catalog");
-    }
-
 }
