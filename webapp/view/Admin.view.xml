@@ -23,6 +23,7 @@
                     />
                     <Button icon="sap-icon://retail-store" tooltip="{i18n>openStore}" type="Transparent" press=".onOpenStore" />
                     <Button
+                        id="enableNotificationsButton"
                         icon="{= ${notify>/permission} === 'denied' ? 'sap-icon://bell' : 'sap-icon://notification' }"
                         tooltip="{= ${notify>/permission} === 'denied' ? ${i18n>notificationsBlocked} : ${i18n>enableNotifications} }"
                         type="Transparent"
@@ -395,7 +396,7 @@
                                 <ColumnListItem>
                                     <cells>
                                         <ObjectIdentifier title="{Title}" text="{= ${path: 'IsActiveEntity', targetType: 'any'} ? '' : ${i18n>draft} }" />
-                                        <Text text="{parts: ['Type'], formatter: '.formatter.policyType'}" />
+                                        <Text text="{path: 'Type', formatter: '.formatPolicyType'}" />
                                         <ObjectStatus
                                             text="{= ${path: 'Active', targetType: 'any'} ? ${i18n>active} : ${i18n>inactive} }"
                                             state="{= ${path: 'Active', targetType: 'any'} ? 'Success' : 'None' }"
@@ -416,14 +417,14 @@
                             <Label text="{i18n>newsletterSubject}" labelFor="newsletterSubjectInput" />
                             <Input
                                 id="newsletterSubjectInput"
-                                value="{newsletter>/subject}"
+                                value="{newsletterAdmin>/subject}"
                                 maxLength="160"
                                 width="100%"
                             />
                             <Label text="{i18n>newsletterBody}" labelFor="newsletterBodyInput" class="sapUiSmallMarginTop" />
                             <TextArea
                                 id="newsletterBodyInput"
-                                value="{newsletter>/body}"
+                                value="{newsletterAdmin>/body}"
                                 rows="8"
                                 growing="true"
                                 growingMaxLines="24"
@@ -431,12 +432,12 @@
                                 placeholder="{i18n>newsletterBodyHint}"
                             />
                             <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginTop">
-                                <Text text="{= ${i18n>newsletterRecipients} + ': ' + ${newsletter>/activeSubscribers} }" />
+                                <Text text="{= ${i18n>newsletterRecipients} + ': ' + ${newsletterAdmin>/activeSubscribers} }" />
                                 <Button
                                     text="{i18n>newsletterSend}"
                                     icon="sap-icon://paper-plane"
                                     type="Emphasized"
-                                    enabled="{= !${newsletter>/sending} }"
+                                    enabled="{= !${newsletterAdmin>/sending} }"
                                     press=".newsletter.onSend"
                                 />
                             </HBox>
@@ -444,6 +445,8 @@
                             <Title text="{i18n>newsletterSubscribersTitle}" level="H3" class="sapUiMediumMarginTop" />
                             <Table
                                 id="subscribersTable"
+                                growing="true"
+                                growingThreshold="50"
                                 popinLayout="GridSmall"
                                 noDataText="{i18n>noSubscribersAdmin}"
                                 class="blTable"
@@ -456,7 +459,7 @@
                             >
                                 <columns>
                                     <Column>
-                                        <Text text="{i18n>policyTitle}" />
+                                        <Text text="{i18n>newsletterSubscriberName}" />
                                     </Column>
                                     <Column minScreenWidth="Tablet" demandPopin="true">
                                         <Text text="{i18n>newsletterSubscriberEmail}" />
@@ -486,6 +489,8 @@
                             <Title text="{i18n>newsletterCampaignsTitle}" level="H3" class="sapUiMediumMarginTop" />
                             <Table
                                 id="campaignsTable"
+                                growing="true"
+                                growingThreshold="50"
                                 popinLayout="GridSmall"
                                 noDataText="{i18n>noCampaignsAdmin}"
                                 class="blTable"

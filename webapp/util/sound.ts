@@ -23,6 +23,11 @@ function audioContext(): AudioContext | null {
     return context;
 }
 
+/** Libera o áudio dentro de um clique do usuário (o navegador bloqueia sons antes disso). */
+export function unlockAudio(): void {
+    void audioContext()?.resume();
+}
+
 /** Toca duas notas curtas (dó e sol) para chamar a atenção do administrador. */
 export function playOrderChime(): void {
     const audio = audioContext();

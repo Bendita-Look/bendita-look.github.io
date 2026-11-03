@@ -96,7 +96,7 @@ export default class CategoriesSection {
                 const content = await ImageCompressor.compress(file);
 
                 await MediaService.uploadMedia(this.imagePath(context), content, ImageCompressor.outputType);
-                context.setProperty("CategoryImageType", ImageCompressor.outputType);
+                await context.setProperty("CategoryImageType", ImageCompressor.outputType);
                 this.setPreview(URL.createObjectURL(content));
             });
         } catch (error) {
@@ -110,7 +110,7 @@ export default class CategoriesSection {
                 const context = this.getDialogContext();
 
                 await MediaService.deleteMedia(this.imagePath(context));
-                context.setProperty("CategoryImageType", null);
+                await context.setProperty("CategoryImageType", null);
                 this.setPreview(null);
             });
         } catch (error) {

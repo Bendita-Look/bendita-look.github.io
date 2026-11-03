@@ -14,6 +14,7 @@
                 <Text text="{i18n>howToBuyIntro}" class="blMuted" wrapping="true" />
 
                 <List
+                    id="helpStepsList"
                     items="{path: 'howToBuy>/steps', templateShareable: false}"
                     class="blHelpSteps"
                 >
@@ -21,14 +22,21 @@
                         <HBox alignItems="Start" class="blHelpStep">
                             <core:Icon src="{howToBuy>icon}" class="blHelpStepIcon" />
                             <VBox class="blHelpStepBody">
-                                <Title text="{howToBuy>title}" level="H3" class="blHelpStepTitle" />
+                                <Title text="{= ${howToBuy>number} + '. ' + ${howToBuy>title} }" level="H3" class="blHelpStepTitle" />
                                 <Text text="{howToBuy>text}" wrapping="true" class="blPolicyText" />
+                                <Button
+                                    text="{howToBuy>actionText}"
+                                    visible="{= !!${howToBuy>actionText} }"
+                                    press=".onHowToBuyAction"
+                                    class="sapUiTinyMarginTop"
+                                />
                             </VBox>
                         </HBox>
                     </CustomListItem>
                 </List>
 
                 <MessageStrip
+                    id="helpFooterStrip"
                     text="{i18n>howToBuyHelpFooter}"
                     type="Information"
                     showIcon="true"

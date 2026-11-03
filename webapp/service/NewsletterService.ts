@@ -1,4 +1,6 @@
 import type ODataModel from "sap/ui/model/odata/v4/ODataModel";
+import Filter from "sap/ui/model/Filter";
+import FilterOperator from "sap/ui/model/FilterOperator";
 
 export interface NewsletterSubscribeInput {
     Name?: string;
@@ -67,11 +69,18 @@ export default class NewsletterService {
     }
 
     public async activeCount(): Promise<number> {
-        const contexts = await this.model
-            .bindList("/Subscribers", undefined, undefined, undefined, { $filter: "Active eq true" })
-            .requestContexts();
+        const binding = this.model.bindList("/Subscribers", undefined, undefined, [new Filter("Active", FilterOperator.EQ, true)], {
+            $count: true,
+            $$groupId: "$direct"
+        });
 
-        return contexts.length;
+        try {
+            await binding.requestContexts(0, 1);
+
+            return binding.getCount() ?? 0;
+        } finally {
+            binding.destroy();
+        }
     }
 
 }

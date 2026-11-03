@@ -1,26 +1,14 @@
 import JSONModel from "sap/ui/model/json/JSONModel";
+import Filter from "sap/ui/model/Filter";
+import FilterOperator from "sap/ui/model/FilterOperator";
+import Sorter from "sap/ui/model/Sorter";
 import type { Route$PatternMatchedEvent } from "sap/ui/core/routing/Route";
-import type Event from "sap/ui/base/Event";
-import type Control from "sap/ui/core/Control";
-import type { ListBase$SelectionChangeEvent } from "sap/m/ListBase";
+import type VBox from "sap/m/VBox";
+import type { ListBase$UpdateFinishedEvent } from "sap/m/ListBase";
 import BaseController from "./BaseController";
-import PolicyService from "../service/PolicyService";
 
-interface StorePolicy {
-    ID: string;
-    Type: string;
-    Title: string;
-    Slug?: string | null;
-    Content?: string | null;
-    SortOrder?: number | null;
-}
-
-interface PolicyState {
-    loaded: boolean;
-    all: StorePolicy[];
-    policy: StorePolicy | null;
-    hasSelection: boolean;
-}
+const INITIAL_STATE = { hasSelection: false, isEmpty: false };
+const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * @namespace apps.dflc.benditalook.controller
@@ -30,65 +18,73 @@ export default class Policy extends BaseController {
     private policyModel: JSONModel;
 
     public onInit(): void {
-        this.policyModel = new JSONModel(this.emptyState());
+        this.policyModel = new JSONModel({ ...INITIAL_STATE });
         this.getView()?.setModel(this.policyModel, "policy");
-        this.getRouter().getRoute("policy")?.attachPatternMatched((event) => this.onRouteMatched(event));
+        this.getRouter().getRoute("policy")?.attachPatternMatched((event) => void this.onRouteMatched(event));
     }
 
-    public onPolicyPress(event: Event): void {
-        const policy = (event.getSource() as Control).getBindingContext("policy")?.getObject() as StorePolicy;
-
-        this.showPolicy(policy);
+    public onPolicyListUpdated(event: ListBase$UpdateFinishedEvent): void {
+        this.policyModel.setProperty("/isEmpty", event.getParameter("actual") === 0);
     }
 
-    public onPolicySelect(event: ListBase$SelectionChangeEvent): void {
-        const policy = event.getParameter("listItem")?.getBindingContext("policy")?.getObject() as StorePolicy | undefined;
-
-        if (policy) {
-            this.showPolicy(policy);
-        }
+    public onBackToList(): void {
+        this.navTo("policy", {});
     }
 
     private async onRouteMatched(event: Route$PatternMatchedEvent): Promise<void> {
         const { type } = event.getParameter("arguments") as { type?: string };
 
-        this.policyModel.setData(this.emptyState());
+        this.policyModel.setProperty("/hasSelection", false);
+        this.policyContent().unbindElement("catalog");
 
+        if (type) {
+            await this.selectPolicy(decodeURIComponent(type).trim());
+        }
+    }
+
+    private async selectPolicy(key: string): Promise<void> {
         try {
-            const all = await this.runBusy(() => new PolicyService(this.getCatalogModel()).list() as Promise<StorePolicy[]>);
+            const path = await this.runBusy(() => this.findPolicyPath(key));
 
-            this.policyModel.setProperty("/all", all);
-            this.policyModel.setProperty("/loaded", true);
-
-            const selected = this.findPolicy(all, type);
-
-            if (selected) {
-                this.showPolicy(selected);
+            if (path) {
+                this.showPolicy(path);
             }
         } catch (error) {
             this.handleError(error, "policiesLoadError");
         }
     }
 
-    private findPolicy(policies: StorePolicy[], type?: string): StorePolicy | undefined {
-        if (!type) {
-            return policies.length === 1 ? policies[0] : undefined;
+    private async findPolicyPath(key: string): Promise<string | undefined> {
+        if (GUID_PATTERN.test(key)) {
+            return `/StorePolicies(${key})`;
         }
 
-        const normalized = decodeURIComponent(type).trim().toLowerCase();
+        const binding = this.getCatalogModel().bindList("/StorePolicies", undefined, [new Sorter("SortOrder")], [
+            new Filter({
+                filters: [
+                    new Filter({ path: "Slug", operator: FilterOperator.EQ, value1: key, caseSensitive: false }),
+                    new Filter({ path: "Type", operator: FilterOperator.EQ, value1: key, caseSensitive: false })
+                ],
+                and: false
+            })
+        ]);
 
-        return policies.find((policy) => (policy.Slug ?? "").toLowerCase() === normalized)
-            ?? policies.find((policy) => policy.Type.toLowerCase() === normalized)
-            ?? policies.find((policy) => policy.ID.toLowerCase() === normalized);
+        try {
+            const contexts = await binding.requestContexts(0, 1);
+
+            return contexts.length ? contexts[0].getPath() : undefined;
+        } finally {
+            binding.destroy();
+        }
     }
 
-    private showPolicy(policy: StorePolicy): void {
-        this.policyModel.setProperty("/policy", policy);
+    private showPolicy(path: string): void {
+        this.policyContent().bindElement({ path, model: "catalog" });
         this.policyModel.setProperty("/hasSelection", true);
     }
 
-    private emptyState(): PolicyState {
-        return { loaded: false, all: [], policy: null, hasSelection: false };
+    private policyContent(): VBox {
+        return this.byId("policyContent") as VBox;
     }
 
 }

@@ -14,30 +14,31 @@
                 <Title text="{i18n>policiesTitle}" level="H1" titleStyle="H2" class="blSectionTitle" />
 
                 <List
-                    items="{path: 'policy>/all', templateShareable: false}"
-                    visible="{= !${policy>/hasSelection} &amp;&amp; ${policy>/all}.length > 1 }"
+                    id="policyList"
+                    items="{path: 'catalog>/StorePolicies', parameters: {$select: 'Slug,Type', $orderby: 'SortOrder,Title'}, templateShareable: false}"
+                    visible="{= !${policy>/hasSelection} }"
                     class="blPolicyList"
-                    mode="SingleSelectMaster"
-                    selectionChange=".onPolicySelect"
+                    updateFinished=".onPolicyListUpdated"
                 >
                     <StandardListItem
-                        title="{policy>Title}"
+                        title="{catalog>Title}"
                         type="Navigation"
-                        press=".onPolicyPress"
+                        press=".onOpenPolicy"
                         class="blPolicyItem"
                     />
                 </List>
 
-                <VBox visible="{policy>/hasSelection}" class="blPolicyContent">
-                    <Title text="{policy>/policy/Title}" level="H2" wrapping="true" class="blPolicyHeading" />
-                    <Text text="{policy>/policy/Content}" renderWhitespace="true" wrapping="true" class="blPolicyText" />
+                <VBox id="policyContent" visible="{policy>/hasSelection}" class="blPolicyContent">
+                    <Button text="{i18n>policyBackToList}" icon="sap-icon://nav-back" type="Transparent" press=".onBackToList" />
+                    <Title text="{catalog>Title}" level="H2" wrapping="true" class="blPolicyHeading" />
+                    <Text text="{catalog>Content}" renderWhitespace="true" wrapping="true" class="blPolicyText" />
                 </VBox>
 
                 <MessageStrip
                     text="{i18n>noPolicies}"
                     type="Information"
                     showIcon="true"
-                    visible="{= ${policy>/all}.length === 0 }"
+                    visible="{policy>/isEmpty}"
                     class="sapUiMediumMarginTop"
                 />
             </VBox>

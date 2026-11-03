@@ -5,8 +5,6 @@ import type Event from "sap/ui/base/Event";
 import type Control from "sap/ui/core/Control";
 import type Dialog from "sap/m/Dialog";
 import type Table from "sap/m/Table";
-import type ColumnListItem from "sap/m/ColumnListItem";
-import type Text from "sap/m/Text";
 import Column from "sap/m/Column";
 import ColumnListItemControl from "sap/m/ColumnListItem";
 import TextControl from "sap/m/Text";

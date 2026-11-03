@@ -14,8 +14,12 @@ import MessageToast from "sap/m/MessageToast";
 import InstanceManager from "sap/m/InstanceManager";
 import Fragment from "sap/ui/core/Fragment";
 import type Dialog from "sap/m/Dialog";
+import type { Button$PressEvent } from "sap/m/Button";
+import type Carousel from "sap/m/Carousel";
+import type { Carousel$PageChangedEvent } from "sap/m/Carousel";
 import formatter from "../model/formatter";
 import type CartModel from "../model/CartModel";
+import type { HowToBuyStep } from "../model/howToBuy";
 import type Component from "../Component";
 import { getBackendErrorMessage } from "../util/feedback";
 import { promptInstall } from "../util/pwa";
@@ -66,8 +70,7 @@ export default abstract class BaseController extends Controller {
     }
 
     public onOpenPolicy(event: Event): void {
-        const source = event.getSource() as Control & { getBindingContext?: (name?: string) => Context | undefined };
-        const context = source.getBindingContext?.("store");
+        const context = event.getSource<Control>().getBindingContext("catalog") as Context | undefined;
         const policy = context?.getObject() as { Slug?: string | null; Type?: string; ID?: string } | undefined;
         const key = policy?.Slug || policy?.Type || policy?.ID;
 
@@ -92,7 +95,42 @@ export default abstract class BaseController extends Controller {
         this.navTo("help");
     }
 
-    /** Carrega (uma única vez) e abre o diálogo do tutorial. */
+    public onStartShopping(): void {
+        this.howToBuyDialog?.close();
+        this.navTo("catalog");
+    }
+
+    public onPreviousStep(): void {
+        this.getHowToBuyCarousel()?.previous();
+    }
+
+    public onNextStep(): void {
+        this.getHowToBuyCarousel()?.next();
+    }
+
+    public onHowToBuyPageChanged(event: Carousel$PageChangedEvent): void {
+        const pageId = event.getParameter("newActivePageId");
+        const index = event.getSource().getPages().findIndex((page) => page.getId() === pageId);
+
+        this.getHowToBuyModel().setProperty("/currentIndex", Math.max(index, 0));
+    }
+
+    public onHowToBuyAction(event: Button$PressEvent): void {
+        const step = event.getSource().getBindingContext("howToBuy")?.getObject() as HowToBuyStep | undefined;
+
+        if (!step?.actionRoute) {
+            return;
+        }
+
+        this.howToBuyDialog?.close();
+        this.navTo(step.actionRoute, step.actionParams ?? {});
+    }
+
+    public formatStepCounter(index: number | undefined, total: number | undefined): string {
+        return this.getText("howToBuyStepCounter", [(index ?? 0) + 1, total ?? 0]);
+    }
+
+    /** Carrega (uma única vez) e abre o diálogo do tutorial, sempre a partir do primeiro passo. */
     protected async openHowToBuyDialog(): Promise<void> {
         if (!this.howToBuyDialog) {
             this.howToBuyDialog = await Fragment.load({
@@ -104,7 +142,27 @@ export default abstract class BaseController extends Controller {
             this.getView()?.addDependent(this.howToBuyDialog);
         }
 
+        this.resetHowToBuyStep();
         this.howToBuyDialog.open();
+    }
+
+    private resetHowToBuyStep(): void {
+        const carousel = this.getHowToBuyCarousel();
+        const firstPage = carousel?.getPages()[0];
+
+        if (carousel && firstPage) {
+            carousel.setActivePage(firstPage);
+        }
+
+        this.getHowToBuyModel().setProperty("/currentIndex", 0);
+    }
+
+    private getHowToBuyCarousel(): Carousel | undefined {
+        return Fragment.byId(this.getView()?.getId() ?? "", "howToBuyCarousel") as Carousel | undefined;
+    }
+
+    private getHowToBuyModel(): JSONModel {
+        return this.getAppComponent().getModel("howToBuy") as JSONModel;
     }
 
     /**
@@ -182,6 +240,18 @@ export default abstract class BaseController extends Controller {
 
     public formatFulfillment(fulfillment: string | null | undefined): string {
         return fulfillment ? this.getText(`fulfillment.${fulfillment}`) : "";
+    }
+
+    // Tipos livres sem chave de tradução aparecem como digitados.
+    public formatPolicyType(type: string | null | undefined): string {
+        if (!type) {
+            return "";
+        }
+
+        const key = `policyType.${type.toUpperCase()}`;
+        const bundle = (this.getAppComponent().getModel("i18n") as ResourceModel).getResourceBundle() as ResourceBundle;
+
+        return bundle.hasText(key) ? this.getText(key) : type;
     }
 
     public formatBalance(balance: number | string | null | undefined): string {

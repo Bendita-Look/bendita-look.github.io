@@ -56,7 +56,7 @@ export default class OrdersSection {
 
     public readonly filterModel = new JSONModel(this.emptyFilters());
 
-    public readonly stateModel = new JSONModel({ selectedCount: 0, restoreStock: true, confirmText: "" });
+    public readonly stateModel = new JSONModel({ selectedCount: 0, restoreStock: true, confirmText: "", deleting: false });
 
     private searchTimer?: ReturnType<typeof setTimeout>;
 
@@ -204,6 +204,10 @@ export default class OrdersSection {
     public onDeleteOpenOrder = (): Promise<void> => this.openDeleteDialog([this.getDialogOrder().ID]);
 
     public onCancelDelete = (): void => {
+        if (this.stateModel.getProperty("/deleting") as boolean) {
+            return;
+        }
+
         this.deleteDialog?.close();
     };
 
@@ -211,12 +215,16 @@ export default class OrdersSection {
         const restoreStock = this.stateModel.getProperty("/restoreStock") as boolean;
         const count = this.deleteIds.length;
 
+        this.stateModel.setProperty("/deleting", true);
+
         try {
             await this.controller.runBusy(() => new AdminOrderService(this.controller.getAdminModel()).deleteOrders(this.deleteIds, restoreStock));
 
             this.afterDelete(count);
         } catch (error) {
             this.controller.handleError(error, "ordersDeleteError");
+        } finally {
+            this.stateModel.setProperty("/deleting", false);
         }
     };
 
