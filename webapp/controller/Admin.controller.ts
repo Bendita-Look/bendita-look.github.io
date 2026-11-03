@@ -74,6 +74,7 @@ export default class Admin extends BaseController {
         this.getView()?.setModel(this.settings.model, "settings");
         this.getView()?.setModel(this.emailServer.model, "emailServer");
         this.getView()?.setModel(this.orders.filterModel, "ordersFilter");
+        this.getView()?.setModel(this.orders.stateModel, "ordersState");
         this.getView()?.setModel(this.products.filterModel, "productsFilter");
         this.getView()?.setModel(this.categories.model, "category");
         this.getView()?.setModel(this.policies.model, "policy");

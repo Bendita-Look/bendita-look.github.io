@@ -106,6 +106,15 @@ export default class AdminOrderService {
         await operation.invoke();
     }
 
+    public async deleteOrders(orderIds: string[], restoreStock: boolean): Promise<void> {
+        const operation = this.adminModel.bindContext("/DeleteOrders(...)");
+
+        operation.setParameter("OrderIds", orderIds);
+        operation.setParameter("RestoreStock", restoreStock);
+
+        await operation.invoke();
+    }
+
     private async invokeItemsChange(path: string, orderId: string, change: OrderChangeInput): Promise<OrderQuote> {
         const operation = this.adminModel.bindContext(path);
 

@@ -111,6 +111,14 @@
                             </ScrollContainer>
                             <HBox alignItems="Center" class="blOrdersActions">
                                 <Button text="{i18n>registerStoreSale}" icon="sap-icon://cart-approval" type="Emphasized" press=".storeSale.onOpenStoreSale" />
+                                <Button
+                                    id="deleteOrdersButton"
+                                    text="{i18n>deleteOrders}"
+                                    icon="sap-icon://delete"
+                                    type="Reject"
+                                    enabled="{= ${ordersState>/selectedCount} > 0 }"
+                                    press=".orders.onDeleteSelected"
+                                />
                                 <Button icon="sap-icon://refresh" tooltip="{i18n>refresh}" press=".orders.onRefresh" />
                             </HBox>
                         </FlexBox>
@@ -143,6 +151,9 @@
                         </FlexBox>
                         <Table
                             id="ordersTable"
+                            mode="MultiSelect"
+                            selectionChange=".orders.onSelectionChange"
+                            updateFinished=".orders.onSelectionChange"
                             popinLayout="GridSmall"
                             growing="true"
                             growingThreshold="30"
@@ -384,7 +395,7 @@
                                 <ColumnListItem>
                                     <cells>
                                         <ObjectIdentifier title="{Title}" text="{= ${path: 'IsActiveEntity', targetType: 'any'} ? '' : ${i18n>draft} }" />
-                                        <Text text="{parts: ['Type'], formatter: '.formatter.policyType}'" />
+                                        <Text text="{parts: ['Type'], formatter: '.formatter.policyType'}" />
                                         <ObjectStatus
                                             text="{= ${path: 'Active', targetType: 'any'} ? ${i18n>active} : ${i18n>inactive} }"
                                             state="{= ${path: 'Active', targetType: 'any'} ? 'Success' : 'None' }"

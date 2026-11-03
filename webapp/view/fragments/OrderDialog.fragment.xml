@@ -208,6 +208,7 @@
             </VBox>
         </content>
         <buttons>
+            <Button id="deleteOrderButton" text="{i18n>deleteOrder}" icon="sap-icon://delete" type="Reject" press=".orders.onDeleteOpenOrder" />
             <Button text="{i18n>whatsapp}" icon="sap-icon://discussion" type="Success" press=".orders.onWhatsapp" visible="{= !!${path: 'CustomerPhone', targetType: 'any'} }" />
             <Button text="{i18n>close}" press=".orders.onCloseDialog" />
         </buttons>
