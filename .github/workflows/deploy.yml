@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-and-deploy:
-    if: github.repository == 'bendita-look.github.io' || github.repository == 'benditalook.github.io'
+    if: github.repository == 'Bendita-Look/bendita-look.github.io' || github.repository == 'BenditaLook/benditalook.github.io'
     runs-on: ubuntu-latest
 
     steps:
