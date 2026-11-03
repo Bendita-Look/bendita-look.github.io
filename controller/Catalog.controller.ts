@@ -26,7 +26,7 @@ export default class Catalog extends BaseController {
     private viewModel: JSONModel;
 
     public onInit(): void {
-        this.viewModel = new JSONModel({ categoryId: "", categoryName: "", search: "", promotions: [] });
+        this.viewModel = new JSONModel({ categoryId: "", categoryName: "", categoryImageType: "", search: "", promotions: [] });
         this.getView()?.setModel(this.viewModel, "catalogView");
         (this.byId("headerBack") as Button | undefined)?.setVisible(false);
         this.getRouter().getRoute("catalog")?.attachPatternMatched(() => this.onRouteMatched());
@@ -37,6 +37,7 @@ export default class Catalog extends BaseController {
 
         this.viewModel.setProperty("/categoryId", context ? context.getProperty("ID") as string : "");
         this.viewModel.setProperty("/categoryName", context ? context.getProperty("Name") as string : "");
+        this.viewModel.setProperty("/categoryImageType", context ? context.getProperty("CategoryImageType") as string : "");
         this.applyFilters();
     }
 

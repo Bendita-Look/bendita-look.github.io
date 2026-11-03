@@ -1,0 +1,48 @@
+<mvc:View
+    controllerName="apps.dflc.benditalook.controller.Policy"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+>
+    <Page id="policyPage" class="blPage">
+        <customHeader>
+            <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.StoreHeader" type="XML" />
+        </customHeader>
+        <content>
+            <VBox class="blContainer blPolicy">
+                <Title text="{i18n>policiesTitle}" level="H1" titleStyle="H2" class="blSectionTitle" />
+
+                <List
+                    items="{path: 'policy>/all', templateShareable: false}"
+                    visible="{= !${policy>/hasSelection} &amp;&amp; ${policy>/all}.length > 1 }"
+                    class="blPolicyList"
+                    mode="SingleSelectMaster"
+                    selectionChange=".onPolicySelect"
+                >
+                    <StandardListItem
+                        title="{policy>Title}"
+                        type="Navigation"
+                        press=".onPolicyPress"
+                        class="blPolicyItem"
+                    />
+                </List>
+
+                <VBox visible="{policy>/hasSelection}" class="blPolicyContent">
+                    <Title text="{policy>/policy/Title}" level="H2" wrapping="true" class="blPolicyHeading" />
+                    <Text text="{policy>/policy/Content}" renderWhitespace="true" wrapping="true" class="blPolicyText" />
+                </VBox>
+
+                <MessageStrip
+                    text="{i18n>noPolicies}"
+                    type="Information"
+                    showIcon="true"
+                    visible="{= ${policy>/all}.length === 0 }"
+                    class="sapUiMediumMarginTop"
+                />
+            </VBox>
+
+            <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.StoreFooter" type="XML" />
+        </content>
+    </Page>
+</mvc:View>

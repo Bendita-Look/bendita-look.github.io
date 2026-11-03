@@ -1,10 +1,13 @@
 import JSONModel from "sap/ui/model/json/JSONModel";
+import MessageBox from "sap/m/MessageBox";
 import type { Route$PatternMatchedEvent } from "sap/ui/core/routing/Route";
 import type { IconTabBar$SelectEvent } from "sap/m/IconTabBar";
 import BaseController from "./BaseController";
 import OrdersSection from "./admin/OrdersSection";
 import ProductsSection from "./admin/ProductsSection";
 import CategoriesSection from "./admin/CategoriesSection";
+import PoliciesSection from "./admin/PoliciesSection";
+import NewsletterSection from "./admin/NewsletterSection";
 import BackupSection from "./admin/BackupSection";
 import ReportsSection from "./admin/ReportsSection";
 import SettingsSection from "./admin/SettingsSection";
@@ -17,10 +20,12 @@ import ProductPicker from "./admin/ProductPicker";
 import WhatsappComposer from "./admin/WhatsappComposer";
 import StockSection from "./admin/StockSection";
 import { AuthenticationService } from "../auth/AuthenticationService";
+import { requestNotificationPermission } from "../util/notifications";
 
 const DEFAULT_TAB = "orders";
 const REPORTS_TAB = "reports";
 const SETTINGS_TAB = "settings";
+const NEWSLETTER_TAB = "newsletter";
 
 /**
  * @namespace apps.dflc.benditalook.controller
@@ -32,6 +37,10 @@ export default class Admin extends BaseController {
     public readonly products = new ProductsSection(this);
 
     public readonly categories = new CategoriesSection(this);
+
+    public readonly policies = new PoliciesSection(this);
+
+    public readonly newsletter = new NewsletterSection(this);
 
     public readonly backup = new BackupSection(this);
 
@@ -60,13 +69,42 @@ export default class Admin extends BaseController {
     public onInit(): void {
         this.viewModel = new JSONModel({ tab: DEFAULT_TAB, userName: "" });
         this.getView()?.setModel(this.viewModel, "adminView");
+        this.getView()?.setModel(this.getAppComponent().getModel("notify") as JSONModel, "notify");
         this.getView()?.setModel(this.reports.model, "report");
         this.getView()?.setModel(this.settings.model, "settings");
         this.getView()?.setModel(this.emailServer.model, "emailServer");
         this.getView()?.setModel(this.orders.filterModel, "ordersFilter");
+        this.getView()?.setModel(this.orders.stateModel, "ordersState");
         this.getView()?.setModel(this.products.filterModel, "productsFilter");
+        this.getView()?.setModel(this.categories.model, "category");
+        this.getView()?.setModel(this.policies.model, "policy");
+        this.getView()?.setModel(this.newsletter.model, "newsletter");
 
         this.getRouter().getRoute("admin")?.attachPatternMatched((event) => this.onRouteMatched(event));
+        window.addEventListener("bl-order-alert", this.onOrderAlert);
+    }
+
+    public onExit(): void {
+        window.removeEventListener("bl-order-alert", this.onOrderAlert);
+    }
+
+    /** Novo pedido enquanto o painel está aberto: atualiza a lista de pedidos. */
+    private onOrderAlert = (): void => {
+        this.orders.refresh();
+    };
+
+    /** Pede ao navegador permissão para mostrar notificações de novos pedidos. */
+    public async onEnableNotifications(): Promise<void> {
+        const model = this.getAppComponent().getModel("notify") as JSONModel;
+        const permission = await requestNotificationPermission();
+
+        model.setProperty("/permission", permission);
+
+        if (permission === "granted") {
+            this.showToast("notificationsEnabled");
+        } else if (permission === "denied") {
+            MessageBox.information(this.getText("notificationsBlocked"));
+        }
     }
 
     public onTabSelect(event: IconTabBar$SelectEvent): void {
@@ -110,6 +148,10 @@ export default class Admin extends BaseController {
 
         if (selectedTab === SETTINGS_TAB) {
             await Promise.all([this.settings.load(), this.emailServer.load()]);
+        }
+
+        if (selectedTab === NEWSLETTER_TAB) {
+            await this.newsletter.load();
         }
     }
 

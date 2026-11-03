@@ -1,0 +1,40 @@
+<mvc:View
+    controllerName="apps.dflc.benditalook.controller.Unsubscribe"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Page id="unsubscribePage" class="blPage">
+        <customHeader>
+            <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.StoreHeader" type="XML" />
+        </customHeader>
+        <content>
+            <VBox class="blContainer blUnsubscribe" alignItems="Center">
+                <Title text="{i18n>unsubscribeTitle}" level="H1" titleStyle="H2" class="blSectionTitle" />
+
+                <VBox visible="{= ${unsubscribe>/state} === 'confirm' }" alignItems="Center">
+                    <Text text="{i18n>unsubscribeConfirmText}" textAlign="Center" wrapping="true" class="blPolicyText" />
+                    <Button
+                        text="{i18n>unsubscribeConfirmButton}"
+                        type="Emphasized"
+                        busy="{unsubscribe>/busy}"
+                        press=".onConfirm"
+                        class="sapUiMediumMarginTop"
+                    />
+                </VBox>
+
+                <MessageStrip
+                    text="{unsubscribe>/message}"
+                    type="{unsubscribe>/state === 'done' ? 'Success' : 'Error'}"
+                    showIcon="true"
+                    visible="{= ${unsubscribe>/state} === 'done' || ${unsubscribe>/state} === 'error' }"
+                    class="sapUiMediumMarginTop"
+                />
+
+                <Link text="{i18n>backToStore}" press=".onGoHome" class="sapUiLargeMarginTop" />
+            </VBox>
+
+            <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.StoreFooter" type="XML" />
+        </content>
+    </Page>
+</mvc:View>

@@ -47,6 +47,12 @@ sap.ui.define([], function () {
       }
       await operation.invoke();
     }
+    async deleteOrders(orderIds, restoreStock) {
+      const operation = this.adminModel.bindContext("/DeleteOrders(...)");
+      operation.setParameter("OrderIds", orderIds);
+      operation.setParameter("RestoreStock", restoreStock);
+      await operation.invoke();
+    }
     async invokeItemsChange(path, orderId, change) {
       const operation = this.adminModel.bindContext(path);
       operation.setParameter("OrderId", orderId);

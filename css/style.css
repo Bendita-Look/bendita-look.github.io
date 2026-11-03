@@ -393,6 +393,23 @@
     margin-bottom: 1rem;
 }
 
+.blCategoryBanner.sapMImg {
+    display: block;
+    width: 100%;
+    max-height: 15rem;
+    object-fit: cover;
+    border-radius: var(--bl-radius);
+    margin-bottom: 1rem;
+}
+
+.blCategoryImagePreview.sapMImg {
+    display: block;
+    width: 100%;
+    border-radius: var(--bl-radius);
+    object-fit: cover;
+    background: var(--bl-gold-softer);
+}
+
 .blCategoryNavItems {
     gap: 0.25rem;
     min-width: max-content;
@@ -787,6 +804,25 @@
 
 .blSize.sapMBtn.sapMBtnDisabled .sapMBtnContent {
     text-decoration: line-through;
+}
+
+.blSizeGuideLink.sapMLnk {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.blSizeGuide {
+    padding: 0.25rem 0;
+}
+
+.blSizeGuideTable .sapMListTblHeaderCell {
+    background: var(--bl-gold-soft);
+}
+
+.blSizeGuideTable .sapMListTblCell {
+    color: var(--bl-text);
 }
 
 .blBuyBox {
@@ -1192,6 +1228,93 @@
 
 .blFooterLink.sapMLnk {
     color: var(--bl-text);
+}
+
+.blFooterNewsletter {
+    flex: 1 1 16rem;
+}
+
+.blNewsletterInput.sapMInputBase {
+    margin-bottom: 0.5rem;
+}
+
+.blNewsletterButton.sapMBtn {
+    margin-top: 0.25rem;
+}
+
+.blPolicy {
+    max-width: 52rem;
+    margin: 0 auto;
+}
+
+.blPolicyList .blPolicyItem .sapMLIBContent {
+    color: var(--bl-text);
+}
+
+.blPolicyHeading.sapMTitle {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--bl-text);
+}
+
+.blPolicyText.sapMText {
+    color: var(--bl-text);
+    line-height: 1.7;
+}
+
+.blHowToBuy {
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.blHowToBuyStep {
+    gap: 0.75rem;
+    padding: 0 1rem;
+}
+
+.blHowToBuyIcon.sapUiIcon {
+    font-size: 3.5rem;
+    color: var(--bl-gold-dark);
+}
+
+.blHowToBuyStepTitle.sapMTitle {
+    color: var(--bl-text);
+    font-weight: 700;
+}
+
+.blHelp {
+    max-width: 52rem;
+    gap: 1rem;
+}
+
+.blHelpSteps .blHelpStep {
+    gap: 1rem;
+    padding: 0.25rem 0;
+}
+
+.blHelpStepIcon.sapUiIcon {
+    font-size: 2rem;
+    color: var(--bl-gold-dark);
+    flex: 0 0 auto;
+    padding-top: 0.25rem;
+}
+
+.blHelpStepBody {
+    gap: 0.25rem;
+}
+
+.blHelpStepTitle.sapMTitle {
+    color: var(--bl-text);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.blUnsubscribe {
+    max-width: 34rem;
+    margin: 0 auto;
+    gap: 0.5rem;
 }
 
 .blFooterBottom {

@@ -2,6 +2,7 @@
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
     xmlns:form="sap.ui.layout.form"
+    xmlns:unified="sap.ui.unified"
 >
     <Dialog
         id="categoryDialog"
@@ -18,6 +19,28 @@
                 <TextArea value="{Description}" maxLength="255" rows="3" />
                 <Label text="{i18n>activeInStore}" />
                 <Switch state="{Active}" customTextOn="{i18n>yes}" customTextOff="{i18n>no}" />
+                <Label text="{i18n>categoryImage}" />
+                <VBox>
+                    <Image
+                        src="{= ${category>/categoryImagePreview} || 'img/placeholder.svg' }"
+                        alt="{Name}"
+                        width="100%"
+                        height="9rem"
+                        densityAware="false"
+                        class="blCategoryImagePreview"
+                    />
+                    <HBox class="sapUiSmallMarginTop" justifyContent="Start">
+                        <unified:FileUploader
+                            buttonOnly="true"
+                            buttonText="{i18n>changeCategoryImage}"
+                            icon="sap-icon://add-photo"
+                            mimeType="image/jpeg,image/png,image/webp"
+                            change=".categories.onCategoryImageSelected"
+                            class="sapUiTinyMarginEnd"
+                        />
+                        <Button text="{i18n>removeCategoryImage}" press=".categories.onRemoveCategoryImage" />
+                    </HBox>
+                </VBox>
             </form:SimpleForm>
         </content>
         <buttons>

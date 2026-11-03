@@ -12,6 +12,8 @@ export class AuthenticationService {
 
     private static authErrorPending = false;
 
+    private static authChangedHandler: (() => void) | null = null;
+
     public static initialize(provider: IAuthenticationProvider): void {
 
         this.provider = provider;
@@ -24,6 +26,8 @@ export class AuthenticationService {
 
         SessionStorage.save(session);
 
+        this.notifyAuthChanged();
+
     }
 
     public static async loginWithPassword(username: string, password: string): Promise<void> {
@@ -32,6 +36,8 @@ export class AuthenticationService {
 
         SessionStorage.save(session);
 
+        this.notifyAuthChanged();
+
     }
 
     public static async logout(): Promise<void> {
@@ -39,6 +45,8 @@ export class AuthenticationService {
         SessionStorage.clear();
 
         await this.provider.logout();
+
+        this.notifyAuthChanged();
 
     }
 
@@ -64,7 +72,22 @@ export class AuthenticationService {
 
         SessionStorage.clear();
 
+        this.notifyAuthChanged();
+
         this.sessionExpiredHandler?.();
+
+    }
+
+    /** Registra o handler chamado quando o login/logout muda (o app reinicia os avisos de pedidos). */
+    public static onAuthChanged(handler: () => void): void {
+
+        this.authChangedHandler = handler;
+
+    }
+
+    private static notifyAuthChanged(): void {
+
+        this.authChangedHandler?.();
 
     }
 

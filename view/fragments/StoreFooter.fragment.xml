@@ -28,6 +28,48 @@
                 <Title text="{i18n>footerFollow}" level="H3" class="blFooterTitle" />
                 <Link text="{store>/Instagram}" press=".onOpenInstagram" class="blFooterLink" />
             </VBox>
+            <VBox class="blFooterColumn" visible="{= ${store>/Policies}.length > 0 }">
+                <Title text="{i18n>footerPolicies}" level="H3" class="blFooterTitle" />
+                <VBox items="{path: 'store>/Policies', templateShareable: true}">
+                    <Link text="{store>Title}" press=".onOpenPolicy" class="blFooterLink" />
+                </VBox>
+            </VBox>
+            <VBox class="blFooterColumn">
+                <Title text="{i18n>footerHelp}" level="H3" class="blFooterTitle" />
+                <Link text="{i18n>howToBuyTitle}" press=".onOpenHowToBuy" class="blFooterLink" />
+                <Link text="{i18n>helpPageTitle}" press=".onOpenHelp" class="blFooterLink" />
+            </VBox>
+            <VBox class="blFooterColumn blFooterNewsletter">
+                <Title text="{i18n>newsletterTitle}" level="H3" class="blFooterTitle" />
+                <Text text="{i18n>newsletterHint}" class="blFooterText" />
+                <VBox visible="{= !${newsletter>/subscribed} }">
+                    <Input
+                        value="{newsletter>/name}"
+                        placeholder="{i18n>newsletterNamePlaceholder}"
+                        maxLength="120"
+                        class="blNewsletterInput"
+                    />
+                    <Input
+                        value="{newsletter>/email}"
+                        type="Email"
+                        placeholder="{i18n>newsletterEmailPlaceholder}"
+                        maxLength="120"
+                        class="blNewsletterInput"
+                    />
+                    <Button
+                        text="{i18n>newsletterSubscribe}"
+                        type="Emphasized"
+                        busy="{newsletter>/busy}"
+                        press=".onNewsletterSubscribe"
+                        class="blNewsletterButton"
+                    />
+                </VBox>
+                <Text
+                    text="{i18n>newsletterSubscribedThanks}"
+                    visible="{= !!${newsletter>/subscribed} }"
+                    class="blFooterText"
+                />
+            </VBox>
         </FlexBox>
         <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap" class="blFooterBottom">
             <Text text="{i18n>footerRights}" class="blFooterSmall" />

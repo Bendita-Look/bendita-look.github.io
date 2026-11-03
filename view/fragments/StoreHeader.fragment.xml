@@ -34,6 +34,13 @@
                 class="blHeaderAction"
             />
             <Button
+                icon="sap-icon://question-mark"
+                type="Transparent"
+                tooltip="{i18n>howToBuyTitle}"
+                press=".onOpenHowToBuy"
+                class="blHeaderAction"
+            />
+            <Button
                 icon="sap-icon://discussion"
                 text="{i18n>headerService}"
                 type="Transparent"
@@ -41,8 +48,7 @@
                 visible="{= !!${store>/Whatsapp} }"
                 press=".onContactWhatsapp"
                 class="blHeaderAction blHeaderService"
-            />
-            <Button
+            />            <Button
                 icon="sap-icon://cart"
                 text="{i18n>cart}"
                 type="Transparent"

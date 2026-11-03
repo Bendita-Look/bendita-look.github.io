@@ -15,6 +15,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/model/Filter", "sap/ui/mod
       this.viewModel = new JSONModel({
         categoryId: "",
         categoryName: "",
+        categoryImageType: "",
         search: "",
         promotions: []
       });
@@ -26,6 +27,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/model/Filter", "sap/ui/mod
       const context = event.getSource().getBindingContext("catalog");
       this.viewModel.setProperty("/categoryId", context ? context.getProperty("ID") : "");
       this.viewModel.setProperty("/categoryName", context ? context.getProperty("Name") : "");
+      this.viewModel.setProperty("/categoryImageType", context ? context.getProperty("CategoryImageType") : "");
       this.applyFilters();
     },
     onSearch: function _onSearch(event) {

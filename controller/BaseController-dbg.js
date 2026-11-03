@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/core/routing/History", "sap/m/MessageBox", "sap/m/MessageToast", "sap/m/InstanceManager", "../model/formatter", "../util/feedback", "../util/pwa", "../util/http", "../auth/AuthenticationService"], function (Controller, UIComponent, History, MessageBox, MessageToast, InstanceManager, __formatter, ___util_feedback, ___util_pwa, ___util_http, ___auth_AuthenticationService) {
+sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/core/routing/History", "sap/m/MessageBox", "sap/m/MessageToast", "sap/m/InstanceManager", "sap/ui/core/Fragment", "../model/formatter", "../util/feedback", "../util/pwa", "../util/http", "../auth/AuthenticationService", "../service/NewsletterService"], function (Controller, UIComponent, History, MessageBox, MessageToast, InstanceManager, Fragment, __formatter, ___util_feedback, ___util_pwa, ___util_http, ___auth_AuthenticationService, __NewsletterService) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -11,6 +11,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
   const isBackendUnavailableError = ___util_http["isBackendUnavailableError"];
   const isSessionExpiredError = ___util_http["isSessionExpiredError"];
   const AuthenticationService = ___auth_AuthenticationService["AuthenticationService"];
+  const NewsletterService = _interopRequireDefault(__NewsletterService);
   /**
    * @namespace apps.dflc.benditalook.controller
    */
@@ -44,6 +45,38 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
     onOpenAdmin: function _onOpenAdmin() {
       this.navTo("admin");
     },
+    onOpenPolicy: function _onOpenPolicy(event) {
+      const source = event.getSource();
+      const context = source.getBindingContext?.("store");
+      const policy = context?.getObject();
+      const key = policy?.Slug || policy?.Type || policy?.ID;
+      if (key) {
+        this.navTo("policy", {
+          type: key
+        });
+      }
+    },
+    /** Abre o tutorial "Como comprar" em um diálogo com passo a passo. */onOpenHowToBuy: async function _onOpenHowToBuy() {
+      await this.openHowToBuyDialog();
+    },
+    /** Fecha o diálogo do tutorial (botão e tecla Esc). */onCloseHowToBuy: function _onCloseHowToBuy() {
+      this.howToBuyDialog?.close();
+    },
+    /** Abre a página de ajuda com o passo a passo completo. */onOpenHelp: function _onOpenHelp() {
+      this.howToBuyDialog?.close();
+      this.navTo("help");
+    },
+    /** Carrega (uma única vez) e abre o diálogo do tutorial. */openHowToBuyDialog: async function _openHowToBuyDialog() {
+      if (!this.howToBuyDialog) {
+        this.howToBuyDialog = await Fragment.load({
+          id: this.getView()?.getId(),
+          name: "apps.dflc.benditalook.view.fragments.HowToBuyDialog",
+          controller: this
+        });
+        this.getView()?.addDependent(this.howToBuyDialog);
+      }
+      this.howToBuyDialog.open();
+    },
     /**
      * Botão "Instalar app" (visível só no navegador, model "pwa"): abre o prompt
      * nativo do Chrome/Edge ou, no iPhone, explica o "Adicionar à Tela de Início".
@@ -62,6 +95,34 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
     },
     onContactEmail: function _onContactEmail() {
       window.open(formatter.mailtoUrl(this.getStoreModel().getProperty("/ContactEmail")), "_self");
+    },
+    /**
+     * Inscreve o visitante na newsletter usando o email digitado no rodapé.
+     * Mostra a mensagem devolvida pelo backend (já inscrito, sucesso, etc.).
+     */
+    onNewsletterSubscribe: async function _onNewsletterSubscribe() {
+      const model = this.getAppComponent().getModel("newsletter");
+      const name = (model.getProperty("/name") ?? "").trim();
+      const email = (model.getProperty("/email") ?? "").trim();
+      if (!email) {
+        MessageBox.error(this.getText("newsletterEmailRequired"));
+        return;
+      }
+      model.setProperty("/busy", true);
+      try {
+        const result = await new NewsletterService(this.getCatalogModel()).subscribe({
+          Name: name || undefined,
+          Email: email
+        });
+        model.setProperty("/subscribed", true);
+        model.setProperty("/name", "");
+        model.setProperty("/email", "");
+        MessageToast.show(result.Message || this.getText("newsletterSubscribedThanks"));
+      } catch (error) {
+        this.handleError(error, "newsletterError");
+      } finally {
+        model.setProperty("/busy", false);
+      }
     },
     onOpenInstagram: function _onOpenInstagram() {
       window.open(formatter.instagramUrl(this.getStoreModel().getProperty("/Instagram")), "_blank");

@@ -55,6 +55,15 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/unified/ColorPickerPopover
     onImagesUpdated: function _onImagesUpdated() {
       void this.loadImages();
     },
+    onAddMeasurement: function _onAddMeasurement() {
+      const binding = this.getListBinding("measurementsTable");
+      binding.create({
+        Size: "",
+        Label: "",
+        Value: "",
+        SortOrder: binding.getLength() ?? 0
+      }, true);
+    },
     onOpenColorPicker: function _onOpenColorPicker(event) {
       const source = event.getSource();
       this.colorPickerContext = source.getBindingContext();

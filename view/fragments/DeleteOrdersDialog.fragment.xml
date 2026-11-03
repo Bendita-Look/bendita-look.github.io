@@ -1,0 +1,28 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Dialog
+        id="deleteOrdersDialog"
+        title="{i18n>deleteOrdersTitle}"
+        contentWidth="28rem"
+        class="blDialog"
+    >
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <Text text="{ordersState>/confirmText}" />
+                <CheckBox
+                    id="deleteOrdersRestoreStock"
+                    text="{i18n>deleteOrdersRestoreStock}"
+                    selected="{ordersState>/restoreStock}"
+                    class="sapUiSmallMarginTop"
+                />
+                <Text text="{i18n>deleteOrdersIrreversible}" class="blMuted sapUiSmallMarginTop" />
+            </VBox>
+        </content>
+        <buttons>
+            <Button id="confirmDeleteOrdersButton" text="{i18n>deleteOrders}" type="Reject" press=".orders.onConfirmDelete" />
+            <Button id="cancelDeleteOrdersButton" text="{i18n>cancel}" press=".orders.onCancelDelete" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

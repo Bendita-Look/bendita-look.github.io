@@ -2,6 +2,9 @@ import Controller from "sap/ui/core/mvc/Controller";
 import UIComponent from "sap/ui/core/UIComponent";
 import History from "sap/ui/core/routing/History";
 import type Router from "sap/ui/core/routing/Router";
+import type Event from "sap/ui/base/Event";
+import type Control from "sap/ui/core/Control";
+import type Context from "sap/ui/model/odata/v4/Context";
 import type ResourceModel from "sap/ui/model/resource/ResourceModel";
 import type ResourceBundle from "sap/base/i18n/ResourceBundle";
 import type ODataModel from "sap/ui/model/odata/v4/ODataModel";
@@ -9,6 +12,8 @@ import type JSONModel from "sap/ui/model/json/JSONModel";
 import MessageBox from "sap/m/MessageBox";
 import MessageToast from "sap/m/MessageToast";
 import InstanceManager from "sap/m/InstanceManager";
+import Fragment from "sap/ui/core/Fragment";
+import type Dialog from "sap/m/Dialog";
 import formatter from "../model/formatter";
 import type CartModel from "../model/CartModel";
 import type Component from "../Component";
@@ -16,6 +21,7 @@ import { getBackendErrorMessage } from "../util/feedback";
 import { promptInstall } from "../util/pwa";
 import { isAuthenticationError, isBackendUnavailableError, isSessionExpiredError } from "../util/http";
 import { AuthenticationService } from "../auth/AuthenticationService";
+import NewsletterService from "../service/NewsletterService";
 
 /**
  * @namespace apps.dflc.benditalook.controller
@@ -23,6 +29,8 @@ import { AuthenticationService } from "../auth/AuthenticationService";
 export default abstract class BaseController extends Controller {
 
     public readonly formatter = formatter;
+
+    private howToBuyDialog?: Dialog;
 
     protected getRouter(): Router {
         return UIComponent.getRouterFor(this);
@@ -57,6 +65,48 @@ export default abstract class BaseController extends Controller {
         this.navTo("admin");
     }
 
+    public onOpenPolicy(event: Event): void {
+        const source = event.getSource() as Control & { getBindingContext?: (name?: string) => Context | undefined };
+        const context = source.getBindingContext?.("store");
+        const policy = context?.getObject() as { Slug?: string | null; Type?: string; ID?: string } | undefined;
+        const key = policy?.Slug || policy?.Type || policy?.ID;
+
+        if (key) {
+            this.navTo("policy", { type: key });
+        }
+    }
+
+    /** Abre o tutorial "Como comprar" em um diálogo com passo a passo. */
+    public async onOpenHowToBuy(): Promise<void> {
+        await this.openHowToBuyDialog();
+    }
+
+    /** Fecha o diálogo do tutorial (botão e tecla Esc). */
+    public onCloseHowToBuy(): void {
+        this.howToBuyDialog?.close();
+    }
+
+    /** Abre a página de ajuda com o passo a passo completo. */
+    public onOpenHelp(): void {
+        this.howToBuyDialog?.close();
+        this.navTo("help");
+    }
+
+    /** Carrega (uma única vez) e abre o diálogo do tutorial. */
+    protected async openHowToBuyDialog(): Promise<void> {
+        if (!this.howToBuyDialog) {
+            this.howToBuyDialog = await Fragment.load({
+                id: this.getView()?.getId(),
+                name: "apps.dflc.benditalook.view.fragments.HowToBuyDialog",
+                controller: this
+            }) as Dialog;
+
+            this.getView()?.addDependent(this.howToBuyDialog);
+        }
+
+        this.howToBuyDialog.open();
+    }
+
     /**
      * Botão "Instalar app" (visível só no navegador, model "pwa"): abre o prompt
      * nativo do Chrome/Edge ou, no iPhone, explica o "Adicionar à Tela de Início".
@@ -78,6 +128,36 @@ export default abstract class BaseController extends Controller {
 
     public onContactEmail(): void {
         window.open(formatter.mailtoUrl(this.getStoreModel().getProperty("/ContactEmail") as string), "_self");
+    }
+
+    /**
+     * Inscreve o visitante na newsletter usando o email digitado no rodapé.
+     * Mostra a mensagem devolvida pelo backend (já inscrito, sucesso, etc.).
+     */
+    public async onNewsletterSubscribe(): Promise<void> {
+        const model = this.getAppComponent().getModel("newsletter") as JSONModel;
+        const name = ((model.getProperty("/name") as string) ?? "").trim();
+        const email = ((model.getProperty("/email") as string) ?? "").trim();
+
+        if (!email) {
+            MessageBox.error(this.getText("newsletterEmailRequired"));
+            return;
+        }
+
+        model.setProperty("/busy", true);
+
+        try {
+            const result = await new NewsletterService(this.getCatalogModel()).subscribe({ Name: name || undefined, Email: email });
+
+            model.setProperty("/subscribed", true);
+            model.setProperty("/name", "");
+            model.setProperty("/email", "");
+            MessageToast.show(result.Message || this.getText("newsletterSubscribedThanks"));
+        } catch (error) {
+            this.handleError(error, "newsletterError");
+        } finally {
+            model.setProperty("/busy", false);
+        }
     }
 
     public onOpenInstagram(): void {

@@ -100,6 +100,42 @@ sap.ui.define(["sap/base/strings/formatMessage", "sap/base/i18n/Localization", "
       }).format(new Date(value)) : "";
     },
     catalogImageUrl,
+    categoryImageUrl(categoryId) {
+      return categoryId ? `${XsuaaAuthHelper.getConfig().catalogService}Categories(${categoryId})/CategoryImage` : "";
+    },
+    policyType(type) {
+      if (!type) {
+        return "";
+      }
+      const labels = {
+        RETURN: {
+          pt: "Trocas e devoluções",
+          en: "Returns and exchanges"
+        },
+        EXCHANGE: {
+          pt: "Trocas",
+          en: "Exchanges"
+        },
+        PRIVACY: {
+          pt: "Privacidade",
+          en: "Privacy"
+        },
+        DELIVERY: {
+          pt: "Entrega e frete",
+          en: "Delivery and shipping"
+        },
+        TERMS: {
+          pt: "Termos de uso",
+          en: "Terms of use"
+        },
+        OTHER: {
+          pt: "Outros",
+          en: "Other"
+        }
+      };
+      const entry = labels[type.toUpperCase()];
+      return entry ? languageTag().startsWith("pt") ? entry.pt : entry.en : type;
+    },
     bannerUrl(bannerId, version) {
       return bannerId ? `${XsuaaAuthHelper.getConfig().catalogService}StoreBanners(${bannerId})/BannerImage?v=${encodeURIComponent(version ?? "")}` : "";
     },

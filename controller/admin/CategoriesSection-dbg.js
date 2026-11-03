@@ -1,11 +1,16 @@
-sap.ui.define(["sap/ui/core/Fragment", "../../service/DraftService"], function (Fragment, __DraftService) {
+sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/json/JSONModel", "../../service/DraftService", "../../service/MediaService", "../../service/ImageCompressor"], function (Fragment, JSONModel, __DraftService, __MediaService, __ImageCompressor) {
   "use strict";
 
   function _interopRequireDefault(obj) {
     return obj && obj.__esModule && typeof obj.default !== "undefined" ? obj.default : obj;
   }
   const DraftService = _interopRequireDefault(__DraftService);
+  const MediaService = _interopRequireDefault(__MediaService);
+  const ImageCompressor = _interopRequireDefault(__ImageCompressor);
   class CategoriesSection {
+    model = new JSONModel({
+      categoryImagePreview: null
+    });
     constructor(controller) {
       this.controller = controller;
     }
@@ -59,15 +64,70 @@ sap.ui.define(["sap/ui/core/Fragment", "../../service/DraftService"], function (
         this.closeDialog();
       }
     };
+    onCategoryImageSelected = async event => {
+      const uploader = event.getSource();
+      const file = event.getParameter("files")?.[0];
+      uploader.clear();
+      if (!file) {
+        return;
+      }
+      try {
+        await this.controller.runBusy(async () => {
+          const context = this.getDialogContext();
+          const content = await ImageCompressor.compress(file);
+          await MediaService.uploadMedia(this.imagePath(context), content, ImageCompressor.outputType);
+          context.setProperty("CategoryImageType", ImageCompressor.outputType);
+          this.setPreview(URL.createObjectURL(content));
+        });
+      } catch (error) {
+        this.controller.handleError(error, "categoryImageUploadError");
+      }
+    };
+    onRemoveCategoryImage = async () => {
+      try {
+        await this.controller.runBusy(async () => {
+          const context = this.getDialogContext();
+          await MediaService.deleteMedia(this.imagePath(context));
+          context.setProperty("CategoryImageType", null);
+          this.setPreview(null);
+        });
+      } catch (error) {
+        this.controller.handleError(error, "categoryImageUploadError");
+      }
+    };
     closeDialog() {
       this.dialog?.close();
       this.dialog?.unbindElement();
+      this.setPreview(null);
       this.getTableBinding().refresh();
     }
     async openDialog(draft) {
       const dialog = await this.getDialog();
       dialog.setBindingContext(draft);
       dialog.open();
+      void this.loadPreview(draft);
+    }
+    async loadPreview(context) {
+      const imageType = await context.requestProperty("CategoryImageType");
+      if (!imageType) {
+        this.setPreview(null);
+        return;
+      }
+      try {
+        this.setPreview(await MediaService.loadMedia(this.imagePath(context)));
+      } catch {
+        this.setPreview(null);
+      }
+    }
+    setPreview(url) {
+      const previous = this.model.getProperty("/categoryImagePreview");
+      if (previous && previous !== url) {
+        URL.revokeObjectURL(previous);
+      }
+      this.model.setProperty("/categoryImagePreview", url);
+    }
+    imagePath(context) {
+      return MediaService.categoryImagePath(context.getProperty("ID"), context.getProperty("IsActiveEntity") !== false);
     }
     getDialogContext() {
       return this.dialog?.getBindingContext();

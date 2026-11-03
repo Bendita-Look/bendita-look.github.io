@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../util/variants"], function (JSONModel, __BaseController, ___util_variants) {
+sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/Column", "sap/m/ColumnListItem", "sap/m/Text", "sap/ui/core/Fragment", "./BaseController", "../util/variants"], function (JSONModel, Column, ColumnListItemControl, TextControl, Fragment, __BaseController, ___util_variants) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -7,7 +7,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../util/varia
   const BaseController = _interopRequireDefault(__BaseController);
   const imagesForColor = ___util_variants["imagesForColor"];
   const sortBySize = ___util_variants["sortBySize"];
-  const PRODUCT_EXPAND = "Category($select=Name),Colors,Variants,Images($select=ID,Color_ID,SortOrder)";
+  const PRODUCT_EXPAND = "Category($select=Name),Colors,Variants,Images($select=ID,Color_ID,SortOrder)," + "Measurements($select=ID,Size,Label,Value,SortOrder)";
 
   /**
    * @namespace apps.dflc.benditalook.controller
@@ -67,12 +67,88 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../util/varia
         }).requestObject());
         this.productModel.setProperty("/product", product);
         this.productModel.setProperty("/colors", product.Colors);
+        this.applySizeGuide(product);
         this.productModel.setProperty("/loaded", true);
         this.selectColor(product.Colors[0]?.ID ?? "");
       } catch (error) {
         this.handleError(error, "productNotFound");
         this.navTo("catalog", {}, true);
       }
+    },
+    onOpenSizeGuide: async function _onOpenSizeGuide() {
+      const dialog = await this.getSizeGuideDialog();
+      this.buildSizeGuideColumns();
+      dialog.open();
+    },
+    onCloseSizeGuide: function _onCloseSizeGuide() {
+      this.sizeGuideDialog?.close();
+    },
+    applySizeGuide: function _applySizeGuide(product) {
+      const entries = product.Measurements ?? [];
+      const labels = [];
+      const sizes = [];
+      entries.forEach(entry => {
+        if (entry.Label && !labels.includes(entry.Label)) {
+          labels.push(entry.Label);
+        }
+        if (entry.Size && !sizes.includes(entry.Size)) {
+          sizes.push(entry.Size);
+        }
+      });
+      const hasSizeGuide = labels.length > 0 && sizes.length > 0;
+      this.productModel.setProperty("/sizeGuide", {
+        columns: labels.map(label => ({
+          label
+        })),
+        rows: sizes.map(size => ({
+          size,
+          cells: labels.map(label => this.measurementOf(entries, size, label))
+        }))
+      });
+      this.productModel.setProperty("/hasSizeGuide", hasSizeGuide);
+    },
+    measurementOf: function _measurementOf(entries, size, label) {
+      const entry = entries.find(candidate => candidate.Size === size && candidate.Label === label);
+      return entry?.Value ?? "—";
+    },
+    buildSizeGuideColumns: function _buildSizeGuideColumns() {
+      const table = Fragment.byId(this.getView()?.getId() ?? "", "sizeGuideTable");
+      const columns = this.productModel.getProperty("/sizeGuide/columns");
+      if (!table) {
+        return;
+      }
+      table.destroyColumns();
+      table.destroyItems();
+      table.addColumn(new Column({
+        header: new TextControl({
+          text: this.getText("size")
+        })
+      }));
+      columns.forEach(column => table.addColumn(new Column({
+        header: new TextControl({
+          text: column.label
+        })
+      })));
+      const rows = this.productModel.getProperty("/sizeGuide/rows");
+      rows.forEach(row => {
+        const cells = [row.size, ...row.cells].map(text => new TextControl({
+          text
+        }));
+        table.addItem(new ColumnListItemControl({
+          cells
+        }));
+      });
+    },
+    getSizeGuideDialog: async function _getSizeGuideDialog() {
+      if (!this.sizeGuideDialog) {
+        this.sizeGuideDialog = await Fragment.load({
+          id: this.getView()?.getId(),
+          name: "apps.dflc.benditalook.view.fragments.SizeGuideDialog",
+          controller: this
+        });
+        this.getView()?.addDependent(this.sizeGuideDialog);
+      }
+      return this.sizeGuideDialog;
     },
     selectColor: function _selectColor(colorId) {
       const product = this.productModel.getProperty("/product");
@@ -109,7 +185,12 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../util/varia
         selectedColorName: "",
         selectedVariantId: "",
         stock: 0,
-        quantity: 1
+        quantity: 1,
+        sizeGuide: {
+          columns: [],
+          rows: []
+        },
+        hasSizeGuide: false
       };
     }
   });

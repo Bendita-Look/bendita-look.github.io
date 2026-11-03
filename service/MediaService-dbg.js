@@ -30,6 +30,12 @@ sap.ui.define(["../util/http"], function (___util_http) {
     static settingsBannerPath(settingsId, isActiveEntity) {
       return `StoreSettings(ID=${settingsId},IsActiveEntity=${isActiveEntity})/BannerImage`;
     }
+    static categoryImagePath(categoryId, isActiveEntity) {
+      return `Categories(ID=${categoryId},IsActiveEntity=${isActiveEntity})/CategoryImage`;
+    }
+    static catalogCategoryImageUrl(categoryId) {
+      return categoryId ? `Categories(${categoryId})/CategoryImage` : "";
+    }
     static async loadMedia(path) {
       const response = await adminRequest(path);
       return URL.createObjectURL(await response.blob());

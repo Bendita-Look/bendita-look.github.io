@@ -1,0 +1,31 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Dialog
+        id="sizeGuideDialog"
+        title="{i18n>sizeGuideTitle}"
+        contentWidth="34rem"
+        class="blDialog"
+    >
+        <content>
+            <VBox class="blSizeGuide">
+                <Text text="{i18n>sizeGuideIntro}" class="blMuted sapUiSmallMarginBottom" />
+
+                <Table
+                    id="sizeGuideTable"
+                    class="blTable blSizeGuideTable"
+                    alternateRowColors="true"
+                />
+
+                <HBox alignItems="Start" class="sapUiSmallMarginTop">
+                    <core:Icon src="sap-icon://measure" class="blDetailBenefitIcon" />
+                    <Text text="{i18n>sizeGuideHint}" class="blMuted" wrapping="true" />
+                </HBox>
+            </VBox>
+        </content>
+        <buttons>
+            <Button text="{i18n>close}" press=".onCloseSizeGuide" />
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

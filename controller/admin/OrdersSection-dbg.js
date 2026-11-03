@@ -19,10 +19,16 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/Filter", "sap/ui/model/Filt
   };
   class OrdersSection {
     deliveryModel = new JSONModel(this.emptyDelivery());
+    deleteIds = [];
     constructor(controller) {
       this.controller = controller;
     }
     filterModel = new JSONModel(this.emptyFilters());
+    stateModel = new JSONModel({
+      selectedCount: 0,
+      restoreStock: true,
+      confirmText: ""
+    });
     onStatusPress = event => {
       this.filterModel.setProperty("/status", event.getSource().data("status") ?? ALL_STATUSES);
       this.applyFilters();
@@ -137,6 +143,30 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/Filter", "sap/ui/model/Filt
     onWhatsapp = () => {
       void this.controller.whatsapp.open(this.getDialogOrder());
     };
+    onSelectionChange = () => {
+      this.stateModel.setProperty("/selectedCount", this.getTable().getSelectedContexts().length);
+    };
+    onDeleteSelected = () => {
+      const orderIds = this.getTable().getSelectedContexts().map(context => context.getProperty("ID"));
+      if (orderIds.length === 0) {
+        return Promise.resolve();
+      }
+      return this.openDeleteDialog(orderIds);
+    };
+    onDeleteOpenOrder = () => this.openDeleteDialog([this.getDialogOrder().ID]);
+    onCancelDelete = () => {
+      this.deleteDialog?.close();
+    };
+    onConfirmDelete = async () => {
+      const restoreStock = this.stateModel.getProperty("/restoreStock");
+      const count = this.deleteIds.length;
+      try {
+        await this.controller.runBusy(() => new AdminOrderService(this.controller.getAdminModel()).deleteOrders(this.deleteIds, restoreStock));
+        this.afterDelete(count);
+      } catch (error) {
+        this.controller.handleError(error, "ordersDeleteError");
+      }
+    };
     async changeStatus(status, successKey, delivery) {
       const order = this.getDialogOrder();
       try {
@@ -148,6 +178,22 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/Filter", "sap/ui/model/Filt
         this.controller.handleError(error, "orderStatusError");
         return false;
       }
+    }
+    async openDeleteDialog(orderIds) {
+      this.deleteIds = orderIds;
+      this.stateModel.setProperty("/restoreStock", true);
+      this.stateModel.setProperty("/confirmText", this.controller.getText("deleteOrdersConfirm", [orderIds.length]));
+      (await this.getDeleteDialog()).open();
+    }
+    afterDelete(count) {
+      this.deleteDialog?.close();
+      this.onCloseDialog();
+      this.dialog?.unbindElement();
+      this.getTable().removeSelections(true);
+      this.stateModel.setProperty("/selectedCount", 0);
+      this.refresh();
+      void this.controller.reports.load();
+      this.controller.showToast("ordersDeleted", [count]);
     }
     async loadChangeableOrder() {
       const path = this.dialog?.getBindingContext()?.getPath();
@@ -229,8 +275,11 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/Filter", "sap/ui/model/Filt
     getDialogOrder() {
       return this.dialog?.getBindingContext()?.getObject();
     }
+    getTable() {
+      return this.controller.byControlId("ordersTable");
+    }
     getTableBinding() {
-      return this.controller.byControlId("ordersTable").getBinding("items");
+      return this.getTable().getBinding("items");
     }
     async getDialog() {
       if (!this.dialog) {
@@ -244,6 +293,12 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/Filter", "sap/ui/model/Filt
         this.deliveryDialog.setModel(this.deliveryModel, "delivery");
       }
       return this.deliveryDialog;
+    }
+    async getDeleteDialog() {
+      if (!this.deleteDialog) {
+        this.deleteDialog = await this.loadFragment("DeleteOrdersDialog");
+      }
+      return this.deleteDialog;
     }
     async loadFragment(name) {
       const view = this.controller.getView();

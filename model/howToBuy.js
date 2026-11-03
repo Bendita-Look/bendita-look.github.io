@@ -1,0 +1,2 @@
+sap.ui.define([],function(){"use strict";const i=[{id:"choose",icon:"sap-icon://search"},{id:"size",icon:"sap-icon://measure"},{id:"cart",icon:"sap-icon://cart"},{id:"checkout",icon:"sap-icon://form"},{id:"whatsapp",icon:"sap-icon://discussion"},{id:"track",icon:"sap-icon://shipping-status"}];function o(o){return i.map(i=>({id:i.id,icon:i.icon,title:o(`howToBuy.${i.id}.title`),text:o(`howToBuy.${i.id}.text`)}))}var c={__esModule:true};c.buildHowToBuySteps=o;return c});
+//# sourceMappingURL=howToBuy.js.map

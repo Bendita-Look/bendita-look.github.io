@@ -1,0 +1,2 @@
+sap.ui.define(["./BaseController"],function(n){"use strict";function t(n){return n&&n.__esModule&&typeof n.default!=="undefined"?n.default:n}const e=t(n);const o=e.extend("apps.dflc.benditalook.controller.Help",{onInit:function n(){},onOpenCatalog:function n(){this.navTo("catalog")}});return o});
+//# sourceMappingURL=Help.controller.js.map

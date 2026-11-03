@@ -22,6 +22,13 @@
                         class="blMuted blAdminUser"
                     />
                     <Button icon="sap-icon://retail-store" tooltip="{i18n>openStore}" type="Transparent" press=".onOpenStore" />
+                    <Button
+                        icon="{= ${notify>/permission} === 'denied' ? 'sap-icon://bell' : 'sap-icon://notification' }"
+                        tooltip="{= ${notify>/permission} === 'denied' ? ${i18n>notificationsBlocked} : ${i18n>enableNotifications} }"
+                        type="Transparent"
+                        visible="{= ${notify>/supported} &amp;&amp; ${notify>/permission} !== 'granted' }"
+                        press=".onEnableNotifications"
+                    />
                     <Button icon="sap-icon://log" tooltip="{i18n>logout}" type="Transparent" press=".onLogout" />
                 </contentRight>
             </Bar>
@@ -104,6 +111,14 @@
                             </ScrollContainer>
                             <HBox alignItems="Center" class="blOrdersActions">
                                 <Button text="{i18n>registerStoreSale}" icon="sap-icon://cart-approval" type="Emphasized" press=".storeSale.onOpenStoreSale" />
+                                <Button
+                                    id="deleteOrdersButton"
+                                    text="{i18n>deleteOrders}"
+                                    icon="sap-icon://delete"
+                                    type="Reject"
+                                    enabled="{= ${ordersState>/selectedCount} > 0 }"
+                                    press=".orders.onDeleteSelected"
+                                />
                                 <Button icon="sap-icon://refresh" tooltip="{i18n>refresh}" press=".orders.onRefresh" />
                             </HBox>
                         </FlexBox>
@@ -136,6 +151,9 @@
                         </FlexBox>
                         <Table
                             id="ordersTable"
+                            mode="MultiSelect"
+                            selectionChange=".orders.onSelectionChange"
+                            updateFinished=".orders.onSelectionChange"
                             popinLayout="GridSmall"
                             growing="true"
                             growingThreshold="30"
@@ -341,6 +359,170 @@
                                 </ColumnListItem>
                             </items>
                         </Table>
+                    </IconTabFilter>
+
+                    <IconTabFilter key="policies" icon="sap-icon://document-text" text="{i18n>policiesTab}">
+                        <Toolbar style="Clear">
+                            <ToolbarSpacer />
+                            <Button text="{i18n>newPolicy}" icon="sap-icon://add" type="Emphasized" press=".policies.onNewPolicy" />
+                        </Toolbar>
+                        <Table
+                            id="policiesTable"
+                            popinLayout="GridSmall"
+                            noDataText="{i18n>noPoliciesAdmin}"
+                            class="blTable"
+                            items="{
+                                path: '/StorePolicies',
+                                parameters: {
+                                    $filter: 'IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null',
+                                    $orderby: 'SortOrder,Title'
+                                }
+                            }"
+                        >
+                            <columns>
+                                <Column>
+                                    <Text text="{i18n>policyTitle}" />
+                                </Column>
+                                <Column minScreenWidth="Tablet" demandPopin="true">
+                                    <Text text="{i18n>policyType}" />
+                                </Column>
+                                <Column hAlign="Center" minScreenWidth="Tablet" demandPopin="true">
+                                    <Text text="{i18n>status}" />
+                                </Column>
+                                <Column width="6rem" />
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <ObjectIdentifier title="{Title}" text="{= ${path: 'IsActiveEntity', targetType: 'any'} ? '' : ${i18n>draft} }" />
+                                        <Text text="{parts: ['Type'], formatter: '.formatter.policyType'}" />
+                                        <ObjectStatus
+                                            text="{= ${path: 'Active', targetType: 'any'} ? ${i18n>active} : ${i18n>inactive} }"
+                                            state="{= ${path: 'Active', targetType: 'any'} ? 'Success' : 'None' }"
+                                        />
+                                        <HBox justifyContent="End">
+                                            <Button icon="sap-icon://edit" type="Transparent" tooltip="{i18n>edit}" press=".policies.onEditPolicy" />
+                                            <Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>delete}" press=".policies.onDeletePolicy" />
+                                        </HBox>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+
+                    <IconTabFilter key="newsletter" icon="sap-icon://email" text="{i18n>newsletterTab}">
+                        <VBox class="sapUiSmallMargin">
+                            <Title text="{i18n>newsletterComposeTitle}" level="H3" />
+                            <Label text="{i18n>newsletterSubject}" labelFor="newsletterSubjectInput" />
+                            <Input
+                                id="newsletterSubjectInput"
+                                value="{newsletter>/subject}"
+                                maxLength="160"
+                                width="100%"
+                            />
+                            <Label text="{i18n>newsletterBody}" labelFor="newsletterBodyInput" class="sapUiSmallMarginTop" />
+                            <TextArea
+                                id="newsletterBodyInput"
+                                value="{newsletter>/body}"
+                                rows="8"
+                                growing="true"
+                                growingMaxLines="24"
+                                width="100%"
+                                placeholder="{i18n>newsletterBodyHint}"
+                            />
+                            <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginTop">
+                                <Text text="{= ${i18n>newsletterRecipients} + ': ' + ${newsletter>/activeSubscribers} }" />
+                                <Button
+                                    text="{i18n>newsletterSend}"
+                                    icon="sap-icon://paper-plane"
+                                    type="Emphasized"
+                                    enabled="{= !${newsletter>/sending} }"
+                                    press=".newsletter.onSend"
+                                />
+                            </HBox>
+
+                            <Title text="{i18n>newsletterSubscribersTitle}" level="H3" class="sapUiMediumMarginTop" />
+                            <Table
+                                id="subscribersTable"
+                                popinLayout="GridSmall"
+                                noDataText="{i18n>noSubscribersAdmin}"
+                                class="blTable"
+                                items="{
+                                    path: '/Subscribers',
+                                    parameters: {
+                                        $orderby: 'createdAt desc'
+                                    }
+                                }"
+                            >
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>policyTitle}" />
+                                    </Column>
+                                    <Column minScreenWidth="Tablet" demandPopin="true">
+                                        <Text text="{i18n>newsletterSubscriberEmail}" />
+                                    </Column>
+                                    <Column hAlign="Center" minScreenWidth="Tablet" demandPopin="true">
+                                        <Text text="{i18n>status}" />
+                                    </Column>
+                                    <Column width="5rem" />
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{Name}" />
+                                            <Text text="{Email}" />
+                                            <ObjectStatus
+                                                text="{= ${path: 'Active', targetType: 'any'} ? ${i18n>active} : ${i18n>inactive} }"
+                                                state="{= ${path: 'Active', targetType: 'any'} ? 'Success' : 'None' }"
+                                            />
+                                            <HBox justifyContent="End">
+                                                <Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>delete}" press=".newsletter.onDeleteSubscriber" />
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+
+                            <Title text="{i18n>newsletterCampaignsTitle}" level="H3" class="sapUiMediumMarginTop" />
+                            <Table
+                                id="campaignsTable"
+                                popinLayout="GridSmall"
+                                noDataText="{i18n>noCampaignsAdmin}"
+                                class="blTable"
+                                items="{
+                                    path: '/NewsletterCampaigns',
+                                    parameters: {
+                                        $filter: 'IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null',
+                                        $orderby: 'createdAt desc'
+                                    }
+                                }"
+                            >
+                                <columns>
+                                    <Column>
+                                        <Text text="{i18n>newsletterSubject}" />
+                                    </Column>
+                                    <Column hAlign="Center" minScreenWidth="Tablet" demandPopin="true">
+                                        <Text text="{i18n>newsletterRecipients}" />
+                                    </Column>
+                                    <Column minScreenWidth="Tablet" demandPopin="true">
+                                        <Text text="{i18n>newsletterSentAt}" />
+                                    </Column>
+                                    <Column width="5rem" />
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{Subject}" />
+                                            <Text text="{= ${RecipientCount} + (${FailureCount} > 0 ? ' (' + ${FailureCount} + ')' : '') }" />
+                                            <Text text="{parts: [{path: 'SentAt'}], formatter: '.formatter.dateTime'}" />
+                                            <HBox justifyContent="End">
+                                                <Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>delete}" press=".newsletter.onDeleteCampaign" />
+                                            </HBox>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
                     </IconTabFilter>
 
                     <IconTabFilter key="promotions" icon="sap-icon://lead" text="{i18n>promotionsTab}">

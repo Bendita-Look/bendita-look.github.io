@@ -48,9 +48,15 @@ export default class OrdersSection {
 
     private returnDetailsDialog?: Dialog;
 
+    private deleteDialog?: Dialog;
+
+    private deleteIds: string[] = [];
+
     constructor(private readonly controller: Admin) { }
 
     public readonly filterModel = new JSONModel(this.emptyFilters());
+
+    public readonly stateModel = new JSONModel({ selectedCount: 0, restoreStock: true, confirmText: "" });
 
     private searchTimer?: ReturnType<typeof setTimeout>;
 
@@ -181,6 +187,39 @@ export default class OrdersSection {
         void this.controller.whatsapp.open(this.getDialogOrder());
     };
 
+    public onSelectionChange = (): void => {
+        this.stateModel.setProperty("/selectedCount", this.getTable().getSelectedContexts().length);
+    };
+
+    public onDeleteSelected = (): Promise<void> => {
+        const orderIds = (this.getTable().getSelectedContexts() as Context[]).map((context) => context.getProperty("ID") as string);
+
+        if (orderIds.length === 0) {
+            return Promise.resolve();
+        }
+
+        return this.openDeleteDialog(orderIds);
+    };
+
+    public onDeleteOpenOrder = (): Promise<void> => this.openDeleteDialog([this.getDialogOrder().ID]);
+
+    public onCancelDelete = (): void => {
+        this.deleteDialog?.close();
+    };
+
+    public onConfirmDelete = async (): Promise<void> => {
+        const restoreStock = this.stateModel.getProperty("/restoreStock") as boolean;
+        const count = this.deleteIds.length;
+
+        try {
+            await this.controller.runBusy(() => new AdminOrderService(this.controller.getAdminModel()).deleteOrders(this.deleteIds, restoreStock));
+
+            this.afterDelete(count);
+        } catch (error) {
+            this.controller.handleError(error, "ordersDeleteError");
+        }
+    };
+
     private async changeStatus(status: OrderStatus, successKey: string, delivery?: DeliveryInput): Promise<boolean> {
         const order = this.getDialogOrder();
 
@@ -196,6 +235,25 @@ export default class OrdersSection {
 
             return false;
         }
+    }
+
+    private async openDeleteDialog(orderIds: string[]): Promise<void> {
+        this.deleteIds = orderIds;
+        this.stateModel.setProperty("/restoreStock", true);
+        this.stateModel.setProperty("/confirmText", this.controller.getText("deleteOrdersConfirm", [orderIds.length]));
+
+        (await this.getDeleteDialog()).open();
+    }
+
+    private afterDelete(count: number): void {
+        this.deleteDialog?.close();
+        this.onCloseDialog();
+        this.dialog?.unbindElement();
+        this.getTable().removeSelections(true);
+        this.stateModel.setProperty("/selectedCount", 0);
+        this.refresh();
+        void this.controller.reports.load();
+        this.controller.showToast("ordersDeleted", [count]);
     }
 
     private async loadChangeableOrder(): Promise<DialogOrder | undefined> {
@@ -276,8 +334,12 @@ export default class OrdersSection {
         return this.dialog?.getBindingContext()?.getObject() as DialogOrder;
     }
 
+    private getTable(): Table {
+        return this.controller.byControlId<Table>("ordersTable");
+    }
+
     private getTableBinding(): ODataListBinding {
-        return this.controller.byControlId<Table>("ordersTable").getBinding("items") as ODataListBinding;
+        return this.getTable().getBinding("items") as ODataListBinding;
     }
 
     private async getDialog(): Promise<Dialog> {
@@ -295,6 +357,14 @@ export default class OrdersSection {
         }
 
         return this.deliveryDialog;
+    }
+
+    private async getDeleteDialog(): Promise<Dialog> {
+        if (!this.deleteDialog) {
+            this.deleteDialog = await this.loadFragment("DeleteOrdersDialog");
+        }
+
+        return this.deleteDialog;
     }
 
     private async loadFragment(name: string): Promise<Dialog> {

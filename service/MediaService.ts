@@ -37,6 +37,14 @@ export default class MediaService {
         return `StoreSettings(ID=${settingsId},IsActiveEntity=${isActiveEntity})/BannerImage`;
     }
 
+    public static categoryImagePath(categoryId: string, isActiveEntity: boolean): string {
+        return `Categories(ID=${categoryId},IsActiveEntity=${isActiveEntity})/CategoryImage`;
+    }
+
+    public static catalogCategoryImageUrl(categoryId: string | null | undefined): string {
+        return categoryId ? `Categories(${categoryId})/CategoryImage` : "";
+    }
+
     public static async loadMedia(path: string): Promise<string> {
         const response = await adminRequest(path);
 

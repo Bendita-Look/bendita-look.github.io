@@ -1,0 +1,2 @@
+sap.ui.define([],function(){"use strict";const e="ID,Type,Title,Slug,SortOrder";class t{constructor(e){this.catalogModel=e}async list(){const t=await this.catalogModel.bindList("/StorePolicies",undefined,undefined,undefined,{$select:e,$orderby:"SortOrder,Title"}).requestContexts();return t.map(e=>e.getObject())}}return t});
+//# sourceMappingURL=PolicyService.js.map

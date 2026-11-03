@@ -6,20 +6,24 @@ sap.ui.define(["./storage/SessionStorage"], function (___storage_SessionStorage)
     static sessionExpiredHandler = null;
     static authErrorHandler = null;
     static authErrorPending = false;
+    static authChangedHandler = null;
     static initialize(provider) {
       this.provider = provider;
     }
     static async login() {
       const session = await this.provider.login();
       SessionStorage.save(session);
+      this.notifyAuthChanged();
     }
     static async loginWithPassword(username, password) {
       const session = await this.provider.loginWithPassword(username, password);
       SessionStorage.save(session);
+      this.notifyAuthChanged();
     }
     static async logout() {
       SessionStorage.clear();
       await this.provider.logout();
+      this.notifyAuthChanged();
     }
     static getSession() {
       return SessionStorage.load();
@@ -32,7 +36,16 @@ sap.ui.define(["./storage/SessionStorage"], function (___storage_SessionStorage)
     }
     static notifySessionExpired() {
       SessionStorage.clear();
+      this.notifyAuthChanged();
       this.sessionExpiredHandler?.();
+    }
+
+    /** Registra o handler chamado quando o login/logout muda (o app reinicia os avisos de pedidos). */
+    static onAuthChanged(handler) {
+      this.authChangedHandler = handler;
+    }
+    static notifyAuthChanged() {
+      this.authChangedHandler?.();
     }
     static onAuthError(handler) {
       this.authErrorHandler = handler;

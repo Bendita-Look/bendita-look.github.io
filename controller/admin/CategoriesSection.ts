@@ -1,14 +1,21 @@
 import Fragment from "sap/ui/core/Fragment";
+import JSONModel from "sap/ui/model/json/JSONModel";
 import type Dialog from "sap/m/Dialog";
 import type Table from "sap/m/Table";
 import type Control from "sap/ui/core/Control";
 import type Event from "sap/ui/base/Event";
 import type Context from "sap/ui/model/odata/v4/Context";
 import type ODataListBinding from "sap/ui/model/odata/v4/ODataListBinding";
+import type FileUploader from "sap/ui/unified/FileUploader";
+import type { FileUploader$ChangeEvent } from "sap/ui/unified/FileUploader";
 import type Admin from "../Admin.controller";
 import DraftService from "../../service/DraftService";
+import MediaService from "../../service/MediaService";
+import ImageCompressor from "../../service/ImageCompressor";
 
 export default class CategoriesSection {
+
+    public readonly model = new JSONModel({ categoryImagePreview: null });
 
     private dialog?: Dialog;
 
@@ -73,9 +80,48 @@ export default class CategoriesSection {
         }
     };
 
+    public onCategoryImageSelected = async (event: FileUploader$ChangeEvent): Promise<void> => {
+        const uploader = event.getSource() as FileUploader;
+        const file = (event.getParameter("files") as File[] | undefined)?.[0];
+
+        uploader.clear();
+
+        if (!file) {
+            return;
+        }
+
+        try {
+            await this.controller.runBusy(async () => {
+                const context = this.getDialogContext();
+                const content = await ImageCompressor.compress(file);
+
+                await MediaService.uploadMedia(this.imagePath(context), content, ImageCompressor.outputType);
+                context.setProperty("CategoryImageType", ImageCompressor.outputType);
+                this.setPreview(URL.createObjectURL(content));
+            });
+        } catch (error) {
+            this.controller.handleError(error, "categoryImageUploadError");
+        }
+    };
+
+    public onRemoveCategoryImage = async (): Promise<void> => {
+        try {
+            await this.controller.runBusy(async () => {
+                const context = this.getDialogContext();
+
+                await MediaService.deleteMedia(this.imagePath(context));
+                context.setProperty("CategoryImageType", null);
+                this.setPreview(null);
+            });
+        } catch (error) {
+            this.controller.handleError(error, "categoryImageUploadError");
+        }
+    };
+
     private closeDialog(): void {
         this.dialog?.close();
         this.dialog?.unbindElement();
+        this.setPreview(null);
         this.getTableBinding().refresh();
     }
 
@@ -84,6 +130,36 @@ export default class CategoriesSection {
 
         dialog.setBindingContext(draft);
         dialog.open();
+        void this.loadPreview(draft);
+    }
+
+    private async loadPreview(context: Context): Promise<void> {
+        const imageType = await context.requestProperty("CategoryImageType") as string | null;
+
+        if (!imageType) {
+            this.setPreview(null);
+            return;
+        }
+
+        try {
+            this.setPreview(await MediaService.loadMedia(this.imagePath(context)));
+        } catch {
+            this.setPreview(null);
+        }
+    }
+
+    private setPreview(url: string | null): void {
+        const previous = this.model.getProperty("/categoryImagePreview") as string | null;
+
+        if (previous && previous !== url) {
+            URL.revokeObjectURL(previous);
+        }
+
+        this.model.setProperty("/categoryImagePreview", url);
+    }
+
+    private imagePath(context: Context): string {
+        return MediaService.categoryImagePath(context.getProperty("ID") as string, context.getProperty("IsActiveEntity") !== false);
     }
 
     private getDialogContext(): Context {
