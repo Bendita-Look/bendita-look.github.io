@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="theme-color" content="#ffcad4">
+    <!-- iPhone instalado: barra de status transparente por cima do header rosa; sem isso o iOS
+         escolhe a cor ao abrir e, ao voltar do multitarefa, às vezes não pinta de novo. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description" content="Bendita Look - moda feminina">
     <title>Bendita Look</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -83,6 +87,11 @@
             width: auto !important;
             height: auto !important;
             max-height: none !important;
+        }
+        /* No celular o ActionSheet abre colado embaixo; a folga evita que o
+           botão Cancelar fique sob a barra de gestos. */
+        html body .sapMActionSheetDialog .sapMActionSheet {
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         @supports (-webkit-touch-callout: none) {
             input, textarea, select {
