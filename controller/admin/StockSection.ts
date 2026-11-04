@@ -1,5 +1,6 @@
 import Fragment from "sap/ui/core/Fragment";
 import JSONModel from "sap/ui/model/json/JSONModel";
+import MessageToast from "sap/m/MessageToast";
 import type Dialog from "sap/m/Dialog";
 import type Table from "sap/m/Table";
 import type Control from "sap/ui/core/Control";
@@ -127,6 +128,33 @@ export default class StockSection {
 
     public onCloseDetails = (): void => {
         this.detailsDialog?.close();
+    };
+
+    public onDeleteEntry = async (): Promise<void> => {
+        const context = this.detailsDialog?.getBindingContext() as Context | null | undefined;
+
+        if (!context) {
+            return;
+        }
+
+        const entryId = context.getProperty("ID") as string;
+        const totalQuantity = context.getProperty("TotalQuantity") as number;
+        const confirmed = await this.controller.confirm("confirmDeleteStockEntry", [totalQuantity]);
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const message = await this.controller.runBusy(() => new StockService(this.controller.getAdminModel()).deleteEntry(entryId));
+
+            this.detailsDialog?.close();
+            MessageToast.show(message);
+            this.refresh();
+            this.controller.products.refresh();
+        } catch (error) {
+            this.controller.handleError(error, "stockEntryDeleteError");
+        }
     };
 
     private setLines(lines: StockLine[]): void {

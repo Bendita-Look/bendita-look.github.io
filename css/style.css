@@ -1320,6 +1320,13 @@
     max-width: 40rem;
 }
 
+/* Status "Novo" na loja usa o rosa da marca em vez do azul informativo do tema. */
+.blMyOrders .sapMObjStatusInformation {
+    --sapInformativeTextColor: var(--bl-rose);
+    --sapInformativeElementColor: var(--bl-rose);
+    color: var(--bl-rose);
+}
+
 .blFooterBottom {
     gap: 0.5rem;
     max-width: 76rem;

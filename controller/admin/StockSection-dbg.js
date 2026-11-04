@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/json/JSONModel", "../../service/StockService"], function (Fragment, JSONModel, __StockService) {
+sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/json/JSONModel", "sap/m/MessageToast", "../../service/StockService"], function (Fragment, JSONModel, MessageToast, __StockService) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -91,6 +91,27 @@ sap.ui.define(["sap/ui/core/Fragment", "sap/ui/model/json/JSONModel", "../../ser
     };
     onCloseDetails = () => {
       this.detailsDialog?.close();
+    };
+    onDeleteEntry = async () => {
+      const context = this.detailsDialog?.getBindingContext();
+      if (!context) {
+        return;
+      }
+      const entryId = context.getProperty("ID");
+      const totalQuantity = context.getProperty("TotalQuantity");
+      const confirmed = await this.controller.confirm("confirmDeleteStockEntry", [totalQuantity]);
+      if (!confirmed) {
+        return;
+      }
+      try {
+        const message = await this.controller.runBusy(() => new StockService(this.controller.getAdminModel()).deleteEntry(entryId));
+        this.detailsDialog?.close();
+        MessageToast.show(message);
+        this.refresh();
+        this.controller.products.refresh();
+      } catch (error) {
+        this.controller.handleError(error, "stockEntryDeleteError");
+      }
     };
     setLines(lines) {
       this.model.setProperty("/lines", lines);

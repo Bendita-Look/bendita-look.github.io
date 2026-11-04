@@ -17,6 +17,12 @@ sap.ui.define([], function () {
       });
       await operation.invoke();
     }
+    async deleteEntry(entryId) {
+      const operation = this.adminModel.bindContext("/DeleteStockEntry(...)");
+      operation.setParameter("EntryId", entryId);
+      await operation.invoke();
+      return operation.getBoundContext().getObject().data;
+    }
   }
   return StockService;
 });
