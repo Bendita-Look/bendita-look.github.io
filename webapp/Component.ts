@@ -20,6 +20,7 @@ import StoreService from "./service/StoreService";
 import OrderWatcher from "./service/OrderWatcher";
 import type { WatchedOrder } from "./service/OrderWatcher";
 import { createNotificationModel, showBrowserNotification } from "./util/notifications";
+import { registerServiceWorker } from "./util/push";
 import { playOrderChime } from "./util/sound";
 import { buildHowToBuySteps } from "./model/howToBuy";
 
@@ -49,6 +50,7 @@ export default class Component extends BaseComponent {
     public init(): void {
         super.init();
 
+        void registerServiceWorker();
         void this.start();
     }
 

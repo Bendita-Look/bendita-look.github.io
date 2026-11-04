@@ -24,11 +24,11 @@
                     <Button icon="sap-icon://retail-store" tooltip="{i18n>openStore}" type="Transparent" press=".onOpenStore" />
                     <Button
                         id="enableNotificationsButton"
-                        icon="{= ${notify>/permission} === 'denied' ? 'sap-icon://bell' : 'sap-icon://notification' }"
-                        tooltip="{= ${notify>/permission} === 'denied' ? ${i18n>notificationsBlocked} : ${i18n>enableNotifications} }"
-                        type="Transparent"
-                        visible="{= ${notify>/supported} &amp;&amp; ${notify>/permission} !== 'granted' }"
-                        press=".onEnableNotifications"
+                        icon="{= ${notify>/pushEnabled} ? 'sap-icon://bell' : 'sap-icon://notification' }"
+                        tooltip="{= ${notify>/pushEnabled} ? ${i18n>pushEnabledTooltip} : (${notify>/permission} === 'denied' ? ${i18n>notificationsBlocked} : ${i18n>enableNotifications}) }"
+                        type="{= ${notify>/pushEnabled} ? 'Emphasized' : 'Transparent' }"
+                        visible="{notify>/supported}"
+                        press=".push.onPress"
                     />
                     <Button icon="sap-icon://log" tooltip="{i18n>logout}" type="Transparent" press=".onLogout" />
                 </contentRight>
