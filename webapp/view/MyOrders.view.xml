@@ -12,6 +12,7 @@
             <VBox class="blContainer blMyOrders">
                 <Title text="{i18n>myOrdersTitle}" level="H1" titleStyle="H2" class="blSectionTitle" />
                 <Text text="{i18n>myOrdersIntro}" class="blMuted sapUiSmallMarginBottom" />
+                <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.OrderPushCard" type="XML" />
 
                 <List
                     id="myOrdersList"

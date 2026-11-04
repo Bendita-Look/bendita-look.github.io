@@ -4,10 +4,9 @@ import {
     arrayBufferToBase64Url,
     browserUserAgent,
     currentPushSubscription,
+    ensurePushSubscription,
     hasApplicationServerKey,
-    pushSupported,
-    serviceWorkerReady,
-    urlBase64ToUint8Array
+    pushSupported
 } from "../util/push";
 
 export type PushEnableResult = "enabled" | "notConfigured" | "dismissed" | "denied" | "unsupported";
@@ -21,7 +20,8 @@ export default class PushService {
 
         await operation.invoke();
 
-        return (operation.getBoundContext().getObject() as { value: string | null }).value;
+        // Sem VAPID o servidor responde 204 e o contexto fica sem objeto.
+        return (operation.getBoundContext().getObject() as { value?: string | null } | null)?.value ?? null;
     }
 
     public async enable(): Promise<PushEnableResult> {
@@ -49,7 +49,7 @@ export default class PushService {
             return "unsupported";
         }
 
-        const subscription = await this.subscribe(key);
+        const subscription = await ensurePushSubscription(key);
 
         await this.register(subscription);
 
@@ -78,7 +78,7 @@ export default class PushService {
             return false;
         }
 
-        const subscription = hasApplicationServerKey(current, key) ? current : await this.subscribe(key);
+        const subscription = hasApplicationServerKey(current, key) ? current : await ensurePushSubscription(key);
 
         await this.register(subscription);
 
@@ -102,23 +102,6 @@ export default class PushService {
         await operation.invoke();
 
         return (operation.getBoundContext().getObject() as { data: string }).data;
-    }
-
-    private async subscribe(key: string): Promise<PushSubscription> {
-        const current = await currentPushSubscription();
-
-        if (current && hasApplicationServerKey(current, key)) {
-            return current;
-        }
-
-        await current?.unsubscribe();
-
-        const registration = await serviceWorkerReady();
-
-        return registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(key)
-        });
     }
 
     private async register(subscription: PushSubscription): Promise<void> {

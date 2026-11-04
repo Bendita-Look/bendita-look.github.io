@@ -26,6 +26,14 @@ import { promptInstall } from "../util/pwa";
 import { isAuthenticationError, isBackendUnavailableError, isSessionExpiredError } from "../util/http";
 import { AuthenticationService } from "../auth/AuthenticationService";
 import NewsletterService from "../service/NewsletterService";
+import OrderPushService from "../service/OrderPushService";
+import type { PushEnableResult } from "../service/PushService";
+
+const ORDER_PUSH_MESSAGES: Partial<Record<PushEnableResult, string>> = {
+    denied: "orderPushBlocked",
+    notConfigured: "orderPushNotConfigured",
+    unsupported: "orderPushUnsupported"
+};
 
 /**
  * @namespace apps.dflc.benditalook.controller
@@ -182,6 +190,54 @@ export default abstract class BaseController extends Controller {
                 title: this.getText("installIosTitle")
             });
         }
+    }
+
+    /** Ativa os avisos de status dos pedidos neste aparelho (card "Avisos do pedido"). */
+    public async onEnableOrderPush(): Promise<void> {
+        const model = this.getOrderPushModel();
+
+        model.setProperty("/busy", true);
+
+        try {
+            this.showOrderPushResult(await new OrderPushService(this.getCatalogModel()).enable());
+        } catch (error) {
+            this.handleError(error, "orderPushError");
+        } finally {
+            model.setProperty("/busy", false);
+        }
+    }
+
+    public async onDisableOrderPush(): Promise<void> {
+        try {
+            await new OrderPushService(this.getCatalogModel()).disable();
+            this.getOrderPushModel().setProperty("/enabled", false);
+            this.showToast("orderPushDisabled");
+        } catch (error) {
+            this.handleError(error, "orderPushError");
+        }
+    }
+
+    /** Vincula os pedidos atuais do aparelho ao servidor (ex.: depois de um pedido novo); sem diálogo. */
+    protected syncOrderPush(): void {
+        void this.getAppComponent().syncOrderPush();
+    }
+
+    private showOrderPushResult(result: PushEnableResult): void {
+        if (result === "enabled") {
+            this.getOrderPushModel().setProperty("/enabled", true);
+            this.showToast("orderPushEnabled");
+            return;
+        }
+
+        const key = ORDER_PUSH_MESSAGES[result];
+
+        if (key) {
+            MessageBox.information(this.getText(key));
+        }
+    }
+
+    private getOrderPushModel(): JSONModel {
+        return this.getAppComponent().getModel("orderPush") as JSONModel;
     }
 
     public onContactWhatsapp(): void {

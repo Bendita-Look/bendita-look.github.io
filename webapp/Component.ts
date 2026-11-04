@@ -7,7 +7,7 @@ import MessageToast from "sap/m/MessageToast";
 import type ResourceModel from "sap/ui/model/resource/ResourceModel";
 import type ResourceBundle from "sap/base/i18n/ResourceBundle";
 import { createDeviceModel } from "./model/models";
-import { createPwaModel } from "./util/pwa";
+import { createPwaModel, isIos, isStandalone } from "./util/pwa";
 import CartModel from "./model/CartModel";
 import { AuthenticationService } from "./auth/AuthenticationService";
 import { AuthenticatedProviderFactory } from "./auth/providers/AuthenticatedProviderFactory";
@@ -17,10 +17,11 @@ import Environment from "./util/Environment";
 import { isAuthenticationError, isAuthorizationError, isBackendUnavailableError, isSessionExpiredError } from "./util/http";
 import { getBackendErrorMessage } from "./util/feedback";
 import StoreService from "./service/StoreService";
+import OrderPushService from "./service/OrderPushService";
 import OrderWatcher from "./service/OrderWatcher";
 import type { WatchedOrder } from "./service/OrderWatcher";
 import { createNotificationModel, showBrowserNotification } from "./util/notifications";
-import { registerServiceWorker } from "./util/push";
+import { pushSupported, registerServiceWorker } from "./util/push";
 import { playOrderChime } from "./util/sound";
 import { buildHowToBuySteps } from "./model/howToBuy";
 
@@ -72,9 +73,11 @@ export default class Component extends BaseComponent {
         this.setModel(new JSONModel({ name: "", email: "", busy: false, subscribed: false }), "newsletter");
         this.setModel(this.createHowToBuyModel(), "howToBuy");
         this.setModel(this.createODataModel(XsuaaAuthHelper.getConfig().catalogService), "catalog");
+        this.setModel(this.createOrderPushModel(), "orderPush");
 
         void this.refreshStoreInfo();
         void this.syncOrderWatcher();
+        void this.syncOrderPush();
 
         const router = this.getRouter() as MobileRouter;
 
@@ -94,6 +97,13 @@ export default class Component extends BaseComponent {
         }
 
         await watcher.sync();
+    }
+
+    /** Reenvia os pedidos do aparelho ao servidor e atualiza o card de avisos; falha em silêncio. */
+    public async syncOrderPush(): Promise<void> {
+        const enabled = await new OrderPushService(this.getModel("catalog") as ODataModel).sync().catch(() => false);
+
+        (this.getModel("orderPush") as JSONModel).setProperty("/enabled", enabled);
     }
 
     /** Avisa o administrador: som, notificação do navegador e aviso interno na tela. */
@@ -290,6 +300,18 @@ export default class Component extends BaseComponent {
     /** Passos do tutorial "como comprar", compartilhados entre o diálogo e a página de ajuda. */
     private createHowToBuyModel(): JSONModel {
         return new JSONModel({ steps: buildHowToBuySteps((key) => this.getText(key)) });
+    }
+
+    /** Estado do card "Avisos do pedido": `enabled` começa com a flag local e é confirmado pelo sync. */
+    private createOrderPushModel(): JSONModel {
+        const service = new OrderPushService(this.getModel("catalog") as ODataModel);
+
+        return new JSONModel({
+            supported: pushSupported(),
+            enabled: service.isEnabled(),
+            needsInstall: isIos() && !isStandalone(),
+            busy: false
+        });
     }
 
 }

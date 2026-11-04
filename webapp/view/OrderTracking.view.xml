@@ -48,6 +48,10 @@
                     </VBox>
                 </HBox>
 
+                <VBox visible="{= ${tracking>/order/Status} !== 'COMPLETED' &amp;&amp; ${tracking>/order/Status} !== 'CANCELLED' }">
+                    <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.OrderPushCard" type="XML" />
+                </VBox>
+
                 <VBox visible="{tracking>/hasDelivery}" class="blDeliveryCard sapUiSmallMarginBottom">
                     <Title text="{i18n>deliveryTitle}" level="H3" class="sapUiTinyMarginBottom" />
                     <Text text="{parts: ['i18n>deliveryTypeLine', 'tracking>/deliveryTypeText'], formatter: '.formatter.message'}" />

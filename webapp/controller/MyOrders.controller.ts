@@ -50,6 +50,7 @@ export default class MyOrders extends BaseController {
         const orders = this.model.getProperty("/orders") as OrderSummary[];
 
         MyOrdersStorage.remove(order.Number);
+        this.syncOrderPush();
         this.model.setProperty("/orders", orders.filter((item) => item.Number !== order.Number));
         this.showToast("myOrdersRemoved");
     }
