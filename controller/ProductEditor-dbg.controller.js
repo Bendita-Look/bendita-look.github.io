@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/unified/ColorPickerPopover", "sap/ui/unified/library", "./BaseController", "../service/DraftService", "../service/MediaService", "../service/ImageCompressor"], function (JSONModel, ColorPickerPopover, sap_ui_unified_library, __BaseController, __DraftService, __MediaService, __ImageCompressor) {
+sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/unified/ColorPickerPopover", "sap/ui/unified/library", "sap/m/Input", "sap/m/MessageBox", "./BaseController", "../service/DraftService", "../service/MediaService", "../service/ImageCompressor"], function (JSONModel, ColorPickerPopover, sap_ui_unified_library, Input, MessageBox, __BaseController, __DraftService, __MediaService, __ImageCompressor) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -10,6 +10,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/unified/ColorPickerPopover
   const MediaService = _interopRequireDefault(__MediaService);
   const ImageCompressor = _interopRequireDefault(__ImageCompressor);
   const PLACEHOLDER_IMAGE = "img/placeholder.svg";
+  const MEASUREMENT_REQUIRED_FIELDS = ["Size", "Label"];
 
   /**
    * @namespace apps.dflc.benditalook.controller
@@ -64,6 +65,12 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/unified/ColorPickerPopover
         SortOrder: binding.getLength() ?? 0
       }, true);
     },
+    onMeasurementInputChange: function _onMeasurementInputChange(event) {
+      const input = event.getSource();
+      if (input.getValue().trim()) {
+        input.setValueState("None");
+      }
+    },
     onOpenColorPicker: function _onOpenColorPicker(event) {
       const source = event.getSource();
       this.colorPickerContext = source.getBindingContext();
@@ -94,6 +101,10 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/unified/ColorPickerPopover
       }
     },
     onSave: async function _onSave() {
+      if (!this.validateMeasurementRows()) {
+        MessageBox.error(this.getText("measurementRowsIncomplete"));
+        return;
+      }
       try {
         await this.runBusy(() => this.draftService().activateDraft(this.getDraftContext()));
         this.showToast("productSaved");
@@ -175,10 +186,24 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/unified/ColorPickerPopover
       return this.colorPicker;
     },
     closeEditor: function _closeEditor() {
+      this.clearMeasurementErrors();
       this.getView()?.unbindElement();
       this.navTo("admin", {
         tab: "products"
       }, true);
+    },
+    validateMeasurementRows: function _validateMeasurementRows() {
+      const inputs = this.getMeasurementRequiredInputs();
+      const emptyInputs = inputs.filter(input => !input.getValue().trim());
+      inputs.forEach(input => input.setValueState(emptyInputs.includes(input) ? "Error" : "None"));
+      return emptyInputs.length === 0;
+    },
+    clearMeasurementErrors: function _clearMeasurementErrors() {
+      this.getMeasurementRequiredInputs().forEach(input => input.setValueState("None"));
+    },
+    getMeasurementRequiredInputs: function _getMeasurementRequiredInputs() {
+      const rows = this.byId("measurementsTable").getItems();
+      return rows.flatMap(row => row.getCells()).filter(cell => cell instanceof Input && MEASUREMENT_REQUIRED_FIELDS.includes(cell.getBindingPath("value") ?? ""));
     },
     getDraftContext: function _getDraftContext() {
       return this.getView()?.getBindingContext();

@@ -100,16 +100,16 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
         });
         this.getView()?.addDependent(this.howToBuyDialog);
       }
-      this.resetHowToBuyStep();
+      this.getHowToBuyModel().setProperty("/currentIndex", 0);
+      this.howToBuyDialog.attachEventOnce("afterOpen", () => this.showFirstHowToBuyStep());
       this.howToBuyDialog.open();
     },
-    resetHowToBuyStep: function _resetHowToBuyStep() {
+    /** O carrossel só troca de página com o DOM renderizado, então o passo inicial é aplicado após a abertura. */showFirstHowToBuyStep: function _showFirstHowToBuyStep() {
       const carousel = this.getHowToBuyCarousel();
       const firstPage = carousel?.getPages()[0];
       if (carousel && firstPage) {
         carousel.setActivePage(firstPage);
       }
-      this.getHowToBuyModel().setProperty("/currentIndex", 0);
     },
     getHowToBuyCarousel: function _getHowToBuyCarousel() {
       return Fragment.byId(this.getView()?.getId() ?? "", "howToBuyCarousel");
@@ -274,7 +274,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
         this.getAppComponent().notifyBackendUnavailable();
         return;
       }
-      const detail = getBackendErrorMessage(error);
+      const detail = getBackendErrorMessage(error, text => this.getText(text));
       const message = this.getText(key);
       const isRepeated = !!detail && message.toLowerCase().includes(detail.replace(/[.!]+$/, "").toLowerCase());
       MessageBox.error(detail && !isRepeated ? `${message}\n\n${detail}` : message);

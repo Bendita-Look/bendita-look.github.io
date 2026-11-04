@@ -8,6 +8,10 @@ import type { Route$PatternMatchedEvent } from "sap/ui/core/routing/Route";
 import type Control from "sap/ui/core/Control";
 import type Event from "sap/ui/base/Event";
 import type Table from "sap/m/Table";
+import type ColumnListItem from "sap/m/ColumnListItem";
+import Input from "sap/m/Input";
+import type { Input$LiveChangeEvent } from "sap/m/Input";
+import MessageBox from "sap/m/MessageBox";
 import type Context from "sap/ui/model/odata/v4/Context";
 import type ODataListBinding from "sap/ui/model/odata/v4/ODataListBinding";
 import BaseController from "./BaseController";
@@ -21,6 +25,8 @@ interface ColorOption {
 }
 
 const PLACEHOLDER_IMAGE = "img/placeholder.svg";
+
+const MEASUREMENT_REQUIRED_FIELDS = ["Size", "Label"];
 
 /**
  * @namespace apps.dflc.benditalook.controller
@@ -80,6 +86,14 @@ export default class ProductEditor extends BaseController {
         binding.create({ Size: "", Label: "", Value: "", SortOrder: binding.getLength() ?? 0 }, true);
     }
 
+    public onMeasurementInputChange(event: Input$LiveChangeEvent): void {
+        const input = event.getSource();
+
+        if (input.getValue().trim()) {
+            input.setValueState("None");
+        }
+    }
+
     public onOpenColorPicker(event: Event): void {
         const source = event.getSource() as Control;
 
@@ -118,6 +132,11 @@ export default class ProductEditor extends BaseController {
     }
 
     public async onSave(): Promise<void> {
+        if (!this.validateMeasurementRows()) {
+            MessageBox.error(this.getText("measurementRowsIncomplete"));
+            return;
+        }
+
         try {
             await this.runBusy(() => this.draftService().activateDraft(this.getDraftContext()));
             this.showToast("productSaved");
@@ -208,8 +227,30 @@ export default class ProductEditor extends BaseController {
     }
 
     private closeEditor(): void {
+        this.clearMeasurementErrors();
         this.getView()?.unbindElement();
         this.navTo("admin", { tab: "products" }, true);
+    }
+
+    private validateMeasurementRows(): boolean {
+        const inputs = this.getMeasurementRequiredInputs();
+        const emptyInputs = inputs.filter((input) => !input.getValue().trim());
+
+        inputs.forEach((input) => input.setValueState(emptyInputs.includes(input) ? "Error" : "None"));
+
+        return emptyInputs.length === 0;
+    }
+
+    private clearMeasurementErrors(): void {
+        this.getMeasurementRequiredInputs().forEach((input) => input.setValueState("None"));
+    }
+
+    private getMeasurementRequiredInputs(): Input[] {
+        const rows = (this.byId("measurementsTable") as Table).getItems() as ColumnListItem[];
+
+        return rows
+            .flatMap((row) => row.getCells())
+            .filter((cell): cell is Input => cell instanceof Input && MEASUREMENT_REQUIRED_FIELDS.includes(cell.getBindingPath("value") ?? ""));
     }
 
     private getDraftContext(): Context {

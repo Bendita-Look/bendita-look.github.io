@@ -142,19 +142,19 @@ export default abstract class BaseController extends Controller {
             this.getView()?.addDependent(this.howToBuyDialog);
         }
 
-        this.resetHowToBuyStep();
+        this.getHowToBuyModel().setProperty("/currentIndex", 0);
+        this.howToBuyDialog.attachEventOnce("afterOpen", () => this.showFirstHowToBuyStep());
         this.howToBuyDialog.open();
     }
 
-    private resetHowToBuyStep(): void {
+    /** O carrossel só troca de página com o DOM renderizado, então o passo inicial é aplicado após a abertura. */
+    private showFirstHowToBuyStep(): void {
         const carousel = this.getHowToBuyCarousel();
         const firstPage = carousel?.getPages()[0];
 
         if (carousel && firstPage) {
             carousel.setActivePage(firstPage);
         }
-
-        this.getHowToBuyModel().setProperty("/currentIndex", 0);
     }
 
     private getHowToBuyCarousel(): Carousel | undefined {
@@ -375,7 +375,7 @@ export default abstract class BaseController extends Controller {
             return;
         }
 
-        const detail = getBackendErrorMessage(error);
+        const detail = getBackendErrorMessage(error, (text) => this.getText(text));
         const message = this.getText(key);
         const isRepeated = !!detail && message.toLowerCase().includes(detail.replace(/[.!]+$/, "").toLowerCase());
 

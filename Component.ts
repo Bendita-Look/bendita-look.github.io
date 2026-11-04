@@ -176,7 +176,7 @@ export default class Component extends BaseComponent {
 
         this.unexpectedErrorShown = true;
 
-        const detail = getBackendErrorMessage(reason);
+        const detail = getBackendErrorMessage(reason, (text) => this.getText(text));
         const message = this.getText("unexpectedError");
 
         MessageBox.error(detail ? `${message}\n\n${detail}` : message, {

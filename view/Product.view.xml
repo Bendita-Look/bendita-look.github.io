@@ -91,11 +91,13 @@
                     <VBox class="blOptionGroup">
                         <HBox justifyContent="SpaceBetween" alignItems="Center" wrap="Wrap">
                             <Text text="{i18n>size}" class="blOptionLabel" />
-                            <Link
+                            <Button
+                                id="sizeGuideButton"
                                 text="{i18n>sizeGuideLink}"
+                                icon="sap-icon://measure"
+                                type="Ghost"
                                 visible="{product>/hasSizeGuide}"
                                 press=".onOpenSizeGuide"
-                                class="blSizeGuideLink"
                             />
                         </HBox>
                         <HBox items="{path: 'product>/sizes', templateShareable: false}" wrap="Wrap" class="blSizes">
