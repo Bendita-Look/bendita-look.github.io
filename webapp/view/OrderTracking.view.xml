@@ -16,6 +16,13 @@
                     titleStyle="H2"
                 />
                 <Text text="{path: 'tracking>/order/createdAt', targetType: 'any', formatter: '.formatter.dateTime'}" class="blMuted" />
+                <Button
+                    text="{i18n>myOrdersTitle}"
+                    icon="sap-icon://list"
+                    type="Transparent"
+                    press=".onOpenMyOrders"
+                    class="sapUiTinyMarginTop"
+                />
 
                 <MessageStrip
                     text="{i18n>orderCancelledInfo}"
