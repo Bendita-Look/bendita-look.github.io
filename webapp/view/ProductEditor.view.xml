@@ -169,8 +169,8 @@
                     <items>
                         <ColumnListItem>
                             <cells>
-                                <Input value="{Size}" maxLength="40" placeholder="{i18n>sizePlaceholder}" />
-                                <Input value="{Label}" maxLength="40" placeholder="{i18n>measurementLabelPlaceholder}" />
+                                <Input value="{Size}" maxLength="40" placeholder="{i18n>sizePlaceholder}" valueStateText="{i18n>measurementRequired}" liveChange=".onMeasurementInputChange" />
+                                <Input value="{Label}" maxLength="40" placeholder="{i18n>measurementLabelPlaceholder}" valueStateText="{i18n>measurementRequired}" liveChange=".onMeasurementInputChange" />
                                 <Input value="{Value}" maxLength="40" placeholder="{i18n>measurementValuePlaceholder}" />
                                 <StepInput value="{SortOrder}" min="0" max="99" width="8rem" />
                                 <Button icon="sap-icon://delete" type="Transparent" tooltip="{i18n>delete}" press=".onDeleteRow" />
