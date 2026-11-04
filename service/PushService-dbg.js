@@ -6,10 +6,9 @@ sap.ui.define(["../util/notifications", "../util/push"], function (___util_notif
   const arrayBufferToBase64Url = ___util_push["arrayBufferToBase64Url"];
   const browserUserAgent = ___util_push["browserUserAgent"];
   const currentPushSubscription = ___util_push["currentPushSubscription"];
+  const ensurePushSubscription = ___util_push["ensurePushSubscription"];
   const hasApplicationServerKey = ___util_push["hasApplicationServerKey"];
   const pushSupported = ___util_push["pushSupported"];
-  const serviceWorkerReady = ___util_push["serviceWorkerReady"];
-  const urlBase64ToUint8Array = ___util_push["urlBase64ToUint8Array"];
   class PushService {
     constructor(adminModel) {
       this.adminModel = adminModel;
@@ -17,7 +16,9 @@ sap.ui.define(["../util/notifications", "../util/push"], function (___util_notif
     async publicKey() {
       const operation = this.adminModel.bindContext("/PushPublicKey(...)");
       await operation.invoke();
-      return operation.getBoundContext().getObject().value;
+
+      // Sem VAPID o servidor responde 204 e o contexto fica sem objeto.
+      return operation.getBoundContext().getObject()?.value ?? null;
     }
     async enable() {
       if (!pushSupported()) {
@@ -37,7 +38,7 @@ sap.ui.define(["../util/notifications", "../util/push"], function (___util_notif
       if (permission !== "granted") {
         return "unsupported";
       }
-      const subscription = await this.subscribe(key);
+      const subscription = await ensurePushSubscription(key);
       await this.register(subscription);
       return "enabled";
     }
@@ -59,7 +60,7 @@ sap.ui.define(["../util/notifications", "../util/push"], function (___util_notif
       if (!key) {
         return false;
       }
-      const subscription = hasApplicationServerKey(current, key) ? current : await this.subscribe(key);
+      const subscription = hasApplicationServerKey(current, key) ? current : await ensurePushSubscription(key);
       await this.register(subscription);
       return true;
     }
@@ -75,18 +76,6 @@ sap.ui.define(["../util/notifications", "../util/push"], function (___util_notif
       const operation = this.adminModel.bindContext("/SendPushTest(...)");
       await operation.invoke();
       return operation.getBoundContext().getObject().data;
-    }
-    async subscribe(key) {
-      const current = await currentPushSubscription();
-      if (current && hasApplicationServerKey(current, key)) {
-        return current;
-      }
-      await current?.unsubscribe();
-      const registration = await serviceWorkerReady();
-      return registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key)
-      });
     }
     async register(subscription) {
       const operation = this.adminModel.bindContext("/SubscribePush(...)");

@@ -35,6 +35,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../service/Co
       }
       const orders = this.model.getProperty("/orders");
       MyOrdersStorage.remove(order.Number);
+      this.syncOrderPush();
       this.model.setProperty("/orders", orders.filter(item => item.Number !== order.Number));
       this.showToast("myOrdersRemoved");
     },

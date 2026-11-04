@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/m/MessageToast", "./model/models", "./util/pwa", "./model/CartModel", "./auth/AuthenticationService", "./auth/providers/AuthenticatedProviderFactory", "./auth/providers/XsuaaAuthHelper", "./auth/storage/SessionStorage", "./util/Environment", "./util/http", "./util/feedback", "./service/StoreService", "./service/OrderWatcher", "./util/notifications", "./util/push", "./util/sound", "./model/howToBuy"], function (BaseComponent, ODataModel, JSONModel, MessageBox, MessageToast, ___model_models, ___util_pwa, __CartModel, ___auth_AuthenticationService, ___auth_providers_AuthenticatedProviderFactory, ___auth_providers_XsuaaAuthHelper, ___auth_storage_SessionStorage, __Environment, ___util_http, ___util_feedback, __StoreService, __OrderWatcher, ___util_notifications, ___util_push, ___util_sound, ___model_howToBuy) {
+sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/m/MessageToast", "./model/models", "./util/pwa", "./model/CartModel", "./auth/AuthenticationService", "./auth/providers/AuthenticatedProviderFactory", "./auth/providers/XsuaaAuthHelper", "./auth/storage/SessionStorage", "./util/Environment", "./util/http", "./util/feedback", "./service/StoreService", "./service/OrderPushService", "./service/OrderWatcher", "./util/notifications", "./util/push", "./util/sound", "./model/howToBuy"], function (BaseComponent, ODataModel, JSONModel, MessageBox, MessageToast, ___model_models, ___util_pwa, __CartModel, ___auth_AuthenticationService, ___auth_providers_AuthenticatedProviderFactory, ___auth_providers_XsuaaAuthHelper, ___auth_storage_SessionStorage, __Environment, ___util_http, ___util_feedback, __StoreService, __OrderPushService, __OrderWatcher, ___util_notifications, ___util_push, ___util_sound, ___model_howToBuy) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -6,6 +6,8 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
   }
   const createDeviceModel = ___model_models["createDeviceModel"];
   const createPwaModel = ___util_pwa["createPwaModel"];
+  const isIos = ___util_pwa["isIos"];
+  const isStandalone = ___util_pwa["isStandalone"];
   const CartModel = _interopRequireDefault(__CartModel);
   const AuthenticationService = ___auth_AuthenticationService["AuthenticationService"];
   const AuthenticatedProviderFactory = ___auth_providers_AuthenticatedProviderFactory["AuthenticatedProviderFactory"];
@@ -18,9 +20,11 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
   const isSessionExpiredError = ___util_http["isSessionExpiredError"];
   const getBackendErrorMessage = ___util_feedback["getBackendErrorMessage"];
   const StoreService = _interopRequireDefault(__StoreService);
+  const OrderPushService = _interopRequireDefault(__OrderPushService);
   const OrderWatcher = _interopRequireDefault(__OrderWatcher);
   const createNotificationModel = ___util_notifications["createNotificationModel"];
   const showBrowserNotification = ___util_notifications["showBrowserNotification"];
+  const pushSupported = ___util_push["pushSupported"];
   const registerServiceWorker = ___util_push["registerServiceWorker"];
   const playOrderChime = ___util_sound["playOrderChime"];
   const buildHowToBuySteps = ___model_howToBuy["buildHowToBuySteps"];
@@ -67,8 +71,10 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
       }), "newsletter");
       this.setModel(this.createHowToBuyModel(), "howToBuy");
       this.setModel(this.createODataModel(XsuaaAuthHelper.getConfig().catalogService), "catalog");
+      this.setModel(this.createOrderPushModel(), "orderPush");
       void this.refreshStoreInfo();
       void this.syncOrderWatcher();
+      void this.syncOrderPush();
       const router = this.getRouter();
       router.getTargetHandler().setCloseDialogs(false);
       router.initialize();
@@ -81,6 +87,10 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
         this.watcherListenerAttached = true;
       }
       await watcher.sync();
+    },
+    /** Reenvia os pedidos do aparelho ao servidor e atualiza o card de avisos; falha em silêncio. */syncOrderPush: async function _syncOrderPush() {
+      const enabled = await new OrderPushService(this.getModel("catalog")).sync().catch(() => false);
+      this.getModel("orderPush").setProperty("/enabled", enabled);
     },
     /** Avisa o administrador: som, notificação do navegador e aviso interno na tela. */alertNewOrders: function _alertNewOrders(orders) {
       const first = orders[0];
@@ -246,6 +256,15 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
     /** Passos do tutorial "como comprar", compartilhados entre o diálogo e a página de ajuda. */createHowToBuyModel: function _createHowToBuyModel() {
       return new JSONModel({
         steps: buildHowToBuySteps(key => this.getText(key))
+      });
+    },
+    /** Estado do card "Avisos do pedido": `enabled` começa com a flag local e é confirmado pelo sync. */createOrderPushModel: function _createOrderPushModel() {
+      const service = new OrderPushService(this.getModel("catalog"));
+      return new JSONModel({
+        supported: pushSupported(),
+        enabled: service.isEnabled(),
+        needsInstall: isIos() && !isStandalone(),
+        busy: false
       });
     }
   });

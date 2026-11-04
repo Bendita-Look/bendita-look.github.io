@@ -1,0 +1,34 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <VBox
+        class="blOrderPushCard sapUiSmallMarginBottom"
+        visible="{= ${orderPush>/needsInstall} || ${orderPush>/supported} }"
+    >
+        <HBox alignItems="Center" wrap="Wrap">
+            <core:Icon src="sap-icon://bell" size="1.5rem" class="sapUiSmallMarginEnd" />
+            <VBox class="sapUiTinyMarginTopBottom">
+                <Title text="{i18n>orderPushTitle}" level="H3" />
+                <Text text="{i18n>orderPushText}" visible="{= !${orderPush>/needsInstall} &amp;&amp; !${orderPush>/enabled} }" />
+                <Text text="{i18n>orderPushInstallHint}" visible="{orderPush>/needsInstall}" />
+                <Text text="{i18n>orderPushOn}" visible="{= !${orderPush>/needsInstall} &amp;&amp; ${orderPush>/enabled} }" />
+            </VBox>
+        </HBox>
+        <Button
+            text="{i18n>orderPushEnable}"
+            type="Emphasized"
+            busy="{orderPush>/busy}"
+            press=".onEnableOrderPush"
+            visible="{= !${orderPush>/needsInstall} &amp;&amp; !${orderPush>/enabled} }"
+            class="sapUiSmallMarginTop"
+        />
+        <Button
+            text="{i18n>orderPushDisable}"
+            type="Transparent"
+            press=".onDisableOrderPush"
+            visible="{= !${orderPush>/needsInstall} &amp;&amp; ${orderPush>/enabled} }"
+            class="sapUiSmallMarginTop"
+        />
+    </VBox>
+</core:FragmentDefinition>

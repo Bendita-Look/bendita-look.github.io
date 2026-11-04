@@ -61,6 +61,20 @@ sap.ui.define([], function () {
     return bytes.length === expected.length && bytes.every((byte, index) => byte === expected[index]);
   }
 
+  // Reaproveita a inscrição atual se ela já usa a chave; senão cancela a antiga e cria outra (exige permissão concedida).
+  async function ensurePushSubscription(key) {
+    const current = await currentPushSubscription();
+    if (current && hasApplicationServerKey(current, key)) {
+      return current;
+    }
+    await current?.unsubscribe();
+    const registration = await serviceWorkerReady();
+    return registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(key)
+    });
+  }
+
   // User agent enviado com a inscrição; cortado ao tamanho da coluna no backend.
   function browserUserAgent() {
     return navigator.userAgent.slice(0, 255);
@@ -81,6 +95,7 @@ sap.ui.define([], function () {
   __exports.currentPushSubscription = currentPushSubscription;
   __exports.urlBase64ToUint8Array = urlBase64ToUint8Array;
   __exports.hasApplicationServerKey = hasApplicationServerKey;
+  __exports.ensurePushSubscription = ensurePushSubscription;
   __exports.browserUserAgent = browserUserAgent;
   __exports.arrayBufferToBase64Url = arrayBufferToBase64Url;
   return __exports;

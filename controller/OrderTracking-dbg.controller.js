@@ -54,6 +54,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../service/Or
       try {
         const order = await this.runBusy(() => new OrderService(this.getCatalogModel()).trackOrder(Number(orderNumber), accessCode));
         MyOrdersStorage.add(Number(orderNumber), accessCode);
+        this.syncOrderPush();
         this.trackingModel.setData({
           loaded: true,
           order,

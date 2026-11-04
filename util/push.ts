@@ -70,6 +70,24 @@ export function hasApplicationServerKey(subscription: PushSubscription, key: str
     return bytes.length === expected.length && bytes.every((byte, index) => byte === expected[index]);
 }
 
+// Reaproveita a inscrição atual se ela já usa a chave; senão cancela a antiga e cria outra (exige permissão concedida).
+export async function ensurePushSubscription(key: string): Promise<PushSubscription> {
+    const current = await currentPushSubscription();
+
+    if (current && hasApplicationServerKey(current, key)) {
+        return current;
+    }
+
+    await current?.unsubscribe();
+
+    const registration = await serviceWorkerReady();
+
+    return registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key)
+    });
+}
+
 // User agent enviado com a inscrição; cortado ao tamanho da coluna no backend.
 export function browserUserAgent(): string {
     return navigator.userAgent.slice(0, 255);

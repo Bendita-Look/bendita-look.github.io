@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/core/routing/History", "sap/m/MessageBox", "sap/m/MessageToast", "sap/m/InstanceManager", "sap/ui/core/Fragment", "../model/formatter", "../util/feedback", "../util/pwa", "../util/http", "../auth/AuthenticationService", "../service/NewsletterService"], function (Controller, UIComponent, History, MessageBox, MessageToast, InstanceManager, Fragment, __formatter, ___util_feedback, ___util_pwa, ___util_http, ___auth_AuthenticationService, __NewsletterService) {
+sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/core/routing/History", "sap/m/MessageBox", "sap/m/MessageToast", "sap/m/InstanceManager", "sap/ui/core/Fragment", "../model/formatter", "../util/feedback", "../util/pwa", "../util/http", "../auth/AuthenticationService", "../service/NewsletterService", "../service/OrderPushService"], function (Controller, UIComponent, History, MessageBox, MessageToast, InstanceManager, Fragment, __formatter, ___util_feedback, ___util_pwa, ___util_http, ___auth_AuthenticationService, __NewsletterService, __OrderPushService) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -12,6 +12,13 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
   const isSessionExpiredError = ___util_http["isSessionExpiredError"];
   const AuthenticationService = ___auth_AuthenticationService["AuthenticationService"];
   const NewsletterService = _interopRequireDefault(__NewsletterService);
+  const OrderPushService = _interopRequireDefault(__OrderPushService);
+  const ORDER_PUSH_MESSAGES = {
+    denied: "orderPushBlocked",
+    notConfigured: "orderPushNotConfigured",
+    unsupported: "orderPushUnsupported"
+  };
+
   /**
    * @namespace apps.dflc.benditalook.controller
    */
@@ -132,6 +139,43 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
           title: this.getText("installIosTitle")
         });
       }
+    },
+    /** Ativa os avisos de status dos pedidos neste aparelho (card "Avisos do pedido"). */onEnableOrderPush: async function _onEnableOrderPush() {
+      const model = this.getOrderPushModel();
+      model.setProperty("/busy", true);
+      try {
+        this.showOrderPushResult(await new OrderPushService(this.getCatalogModel()).enable());
+      } catch (error) {
+        this.handleError(error, "orderPushError");
+      } finally {
+        model.setProperty("/busy", false);
+      }
+    },
+    onDisableOrderPush: async function _onDisableOrderPush() {
+      try {
+        await new OrderPushService(this.getCatalogModel()).disable();
+        this.getOrderPushModel().setProperty("/enabled", false);
+        this.showToast("orderPushDisabled");
+      } catch (error) {
+        this.handleError(error, "orderPushError");
+      }
+    },
+    /** Vincula os pedidos atuais do aparelho ao servidor (ex.: depois de um pedido novo); sem diálogo. */syncOrderPush: function _syncOrderPush() {
+      void this.getAppComponent().syncOrderPush();
+    },
+    showOrderPushResult: function _showOrderPushResult(result) {
+      if (result === "enabled") {
+        this.getOrderPushModel().setProperty("/enabled", true);
+        this.showToast("orderPushEnabled");
+        return;
+      }
+      const key = ORDER_PUSH_MESSAGES[result];
+      if (key) {
+        MessageBox.information(this.getText(key));
+      }
+    },
+    getOrderPushModel: function _getOrderPushModel() {
+      return this.getAppComponent().getModel("orderPush");
     },
     onContactWhatsapp: function _onContactWhatsapp() {
       this.openWhatsapp(this.getText("whatsappGreeting"));
