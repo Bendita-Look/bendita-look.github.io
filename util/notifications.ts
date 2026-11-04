@@ -1,4 +1,5 @@
 import JSONModel from "sap/ui/model/json/JSONModel";
+import { pushSupported } from "./push";
 
 /**
  * Notificações do navegador (Web Notifications) para avisar o administrador
@@ -21,7 +22,9 @@ export function notificationPermission(): NotificationPermissionState {
 export function createNotificationModel(): JSONModel {
     return new JSONModel({
         supported: notificationSupported(),
-        permission: notificationPermission()
+        permission: notificationPermission(),
+        pushSupported: pushSupported(),
+        pushEnabled: false
     });
 }
 

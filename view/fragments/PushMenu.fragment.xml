@@ -1,0 +1,11 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <ActionSheet id="pushMenu" showCancelButton="true">
+        <buttons>
+            <Button text="{i18n>pushSendTest}" icon="sap-icon://paper-plane" press=".push.onSendTest" />
+            <Button text="{i18n>pushDisable}" icon="sap-icon://sys-cancel" press=".push.onDisable" />
+        </buttons>
+    </ActionSheet>
+</core:FragmentDefinition>

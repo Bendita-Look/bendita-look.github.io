@@ -1,5 +1,4 @@
 import JSONModel from "sap/ui/model/json/JSONModel";
-import MessageBox from "sap/m/MessageBox";
 import type { Route$PatternMatchedEvent } from "sap/ui/core/routing/Route";
 import type { IconTabBar$SelectEvent } from "sap/m/IconTabBar";
 import BaseController from "./BaseController";
@@ -19,9 +18,8 @@ import OrderReturnSection from "./admin/OrderReturnSection";
 import ProductPicker from "./admin/ProductPicker";
 import WhatsappComposer from "./admin/WhatsappComposer";
 import StockSection from "./admin/StockSection";
+import PushSection from "./admin/PushSection";
 import { AuthenticationService } from "../auth/AuthenticationService";
-import { requestNotificationPermission } from "../util/notifications";
-import { unlockAudio } from "../util/sound";
 
 const DEFAULT_TAB = "orders";
 const REPORTS_TAB = "reports";
@@ -65,6 +63,8 @@ export default class Admin extends BaseController {
 
     public readonly stock = new StockSection(this);
 
+    public readonly push = new PushSection(this);
+
     private viewModel: JSONModel;
 
     public onInit(): void {
@@ -94,23 +94,6 @@ export default class Admin extends BaseController {
         this.orders.refresh();
     };
 
-    /** Pede ao navegador permissão para mostrar notificações de novos pedidos. */
-    public async onEnableNotifications(): Promise<void> {
-        const model = this.getAppComponent().getModel("notify") as JSONModel;
-
-        unlockAudio();
-
-        const permission = await requestNotificationPermission();
-
-        model.setProperty("/permission", permission);
-
-        if (permission === "granted") {
-            this.showToast("notificationsEnabled");
-        } else if (permission === "denied") {
-            MessageBox.information(this.getText("notificationsBlocked"));
-        }
-    }
-
     public onTabSelect(event: IconTabBar$SelectEvent): void {
         this.navTo("admin", { tab: event.getParameter("key") }, true);
     }
@@ -120,6 +103,7 @@ export default class Admin extends BaseController {
     }
 
     public async onLogout(): Promise<void> {
+        await this.push.beforeLogout();
         await AuthenticationService.logout();
         this.navTo("catalog", {}, true);
     }
@@ -136,6 +120,8 @@ export default class Admin extends BaseController {
             this.navTo("login", {}, true);
             return;
         }
+
+        void this.push.sync();
 
         const selectedTab = tab || DEFAULT_TAB;
 

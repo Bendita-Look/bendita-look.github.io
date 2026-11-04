@@ -1,13 +1,13 @@
-sap.ui.define(["sap/ui/model/json/JSONModel"], function (JSONModel) {
+sap.ui.define(["sap/ui/model/json/JSONModel", "./push"], function (JSONModel, ___push) {
   "use strict";
 
+  const pushSupported = ___push["pushSupported"];
   /**
    * Notificações do navegador (Web Notifications) para avisar o administrador
    * sobre novos pedidos mesmo quando ele está em outra aba/parte do site.
    * A permissão é pedida pelo botão no painel; se negada, o app ainda toca o som
    * e mostra o aviso interno.
    */
-
   function notificationSupported() {
     return typeof window !== "undefined" && "Notification" in window;
   }
@@ -19,7 +19,9 @@ sap.ui.define(["sap/ui/model/json/JSONModel"], function (JSONModel) {
   function createNotificationModel() {
     return new JSONModel({
       supported: notificationSupported(),
-      permission: notificationPermission()
+      permission: notificationPermission(),
+      pushSupported: pushSupported(),
+      pushEnabled: false
     });
   }
 

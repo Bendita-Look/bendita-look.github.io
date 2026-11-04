@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/m/MessageToast", "./model/models", "./util/pwa", "./model/CartModel", "./auth/AuthenticationService", "./auth/providers/AuthenticatedProviderFactory", "./auth/providers/XsuaaAuthHelper", "./auth/storage/SessionStorage", "./util/Environment", "./util/http", "./util/feedback", "./service/StoreService", "./service/OrderWatcher", "./util/notifications", "./util/sound", "./model/howToBuy"], function (BaseComponent, ODataModel, JSONModel, MessageBox, MessageToast, ___model_models, ___util_pwa, __CartModel, ___auth_AuthenticationService, ___auth_providers_AuthenticatedProviderFactory, ___auth_providers_XsuaaAuthHelper, ___auth_storage_SessionStorage, __Environment, ___util_http, ___util_feedback, __StoreService, __OrderWatcher, ___util_notifications, ___util_sound, ___model_howToBuy) {
+sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/m/MessageToast", "./model/models", "./util/pwa", "./model/CartModel", "./auth/AuthenticationService", "./auth/providers/AuthenticatedProviderFactory", "./auth/providers/XsuaaAuthHelper", "./auth/storage/SessionStorage", "./util/Environment", "./util/http", "./util/feedback", "./service/StoreService", "./service/OrderWatcher", "./util/notifications", "./util/push", "./util/sound", "./model/howToBuy"], function (BaseComponent, ODataModel, JSONModel, MessageBox, MessageToast, ___model_models, ___util_pwa, __CartModel, ___auth_AuthenticationService, ___auth_providers_AuthenticatedProviderFactory, ___auth_providers_XsuaaAuthHelper, ___auth_storage_SessionStorage, __Environment, ___util_http, ___util_feedback, __StoreService, __OrderWatcher, ___util_notifications, ___util_push, ___util_sound, ___model_howToBuy) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -21,6 +21,7 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
   const OrderWatcher = _interopRequireDefault(__OrderWatcher);
   const createNotificationModel = ___util_notifications["createNotificationModel"];
   const showBrowserNotification = ___util_notifications["showBrowserNotification"];
+  const registerServiceWorker = ___util_push["registerServiceWorker"];
   const playOrderChime = ___util_sound["playOrderChime"];
   const buildHowToBuySteps = ___model_howToBuy["buildHowToBuySteps"];
   const ADMIN_ROUTE = "admin";
@@ -43,6 +44,7 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
     },
     init: function _init() {
       BaseComponent.prototype.init.call(this);
+      void registerServiceWorker();
       void this.start();
     },
     start: async function _start() {
