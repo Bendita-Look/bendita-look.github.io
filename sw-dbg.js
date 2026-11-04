@@ -35,7 +35,8 @@ function showPushNotification(event) {
         body: payload.body,
         tag: payload.tag,
         renotify: !!payload.tag,
-        icon: assetUrl("img/icon-192.png"),
+        // Mesmo ícone da notificação com o app aberto: o icon-192 não tem transparência e o Windows o mostra distorcido.
+        icon: assetUrl("img/favicon.png"),
         badge: assetUrl("img/favicon.png"),
         data: { url: payload.url || self.registration.scope }
     });
