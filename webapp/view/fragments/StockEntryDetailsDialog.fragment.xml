@@ -45,6 +45,7 @@
             </VBox>
         </content>
         <buttons>
+            <Button text="{i18n>deleteStockEntry}" icon="sap-icon://delete" type="Reject" press=".stock.onDeleteEntry" />
             <Button text="{i18n>close}" press=".stock.onCloseDetails" />
         </buttons>
     </Dialog>

@@ -26,4 +26,14 @@ export default class StockService {
         await operation.invoke();
     }
 
+    public async deleteEntry(entryId: string): Promise<string> {
+        const operation = this.adminModel.bindContext("/DeleteStockEntry(...)");
+
+        operation.setParameter("EntryId", entryId);
+
+        await operation.invoke();
+
+        return (operation.getBoundContext().getObject() as { data: string }).data;
+    }
+
 }
