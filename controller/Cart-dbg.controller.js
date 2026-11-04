@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/ui/core/library", "./BaseController", "../service/OrderService", "../service/AddressService", "../service/ContactStorage"], function (JSONModel, MessageBox, sap_ui_core_library, __BaseController, __OrderService, __AddressService, __ContactStorage) {
+sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/ui/core/library", "./BaseController", "../service/OrderService", "../service/AddressService", "../service/ContactStorage", "../service/MyOrdersStorage"], function (JSONModel, MessageBox, sap_ui_core_library, __BaseController, __OrderService, __AddressService, __ContactStorage, __MyOrdersStorage) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -11,6 +11,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/ui/core/l
   const FulfillmentType = __OrderService["FulfillmentType"];
   const AddressService = _interopRequireDefault(__AddressService);
   const ContactStorage = _interopRequireDefault(__ContactStorage);
+  const MyOrdersStorage = _interopRequireDefault(__MyOrdersStorage);
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const PHONE_DIGITS = {
     min: 10,
@@ -105,6 +106,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/ui/core/l
         };
         const order = await this.runBusy(() => new OrderService(this.getCatalogModel()).submitOrder(contact, cartItems));
         ContactStorage.save(contact);
+        MyOrdersStorage.add(order.Number, order.AccessCode);
         this.getCartModel().clear();
         this.checkoutModel.setData(this.initialState());
         MessageBox.success(this.getText("orderSubmittedMessage", [order.Number]), {

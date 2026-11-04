@@ -95,6 +95,10 @@ export default abstract class BaseController extends Controller {
         this.navTo("help");
     }
 
+    public onOpenMyOrders(): void {
+        this.navTo("myOrders");
+    }
+
     public onStartShopping(): void {
         this.howToBuyDialog?.close();
         this.navTo("catalog");

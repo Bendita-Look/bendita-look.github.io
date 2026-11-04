@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../service/OrderService", "../service/AdminOrderService", "../model/formatter"], function (JSONModel, __BaseController, __OrderService, ___service_AdminOrderService, ___model_formatter) {
+sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../service/OrderService", "../service/AdminOrderService", "../model/formatter", "../service/MyOrdersStorage"], function (JSONModel, __BaseController, __OrderService, ___service_AdminOrderService, ___model_formatter, __MyOrdersStorage) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -9,6 +9,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../service/Or
   const FulfillmentType = __OrderService["FulfillmentType"];
   const DeliveryType = ___service_AdminOrderService["DeliveryType"];
   const OrderStatus = ___model_formatter["OrderStatus"];
+  const MyOrdersStorage = _interopRequireDefault(__MyOrdersStorage);
   const STEPS = [OrderStatus.New, OrderStatus.InService, OrderStatus.OutForDelivery, OrderStatus.Completed];
 
   /**
@@ -52,6 +53,7 @@ sap.ui.define(["sap/ui/model/json/JSONModel", "./BaseController", "../service/Or
       this.trackingModel.setProperty("/loaded", false);
       try {
         const order = await this.runBusy(() => new OrderService(this.getCatalogModel()).trackOrder(Number(orderNumber), accessCode));
+        MyOrdersStorage.add(Number(orderNumber), accessCode);
         this.trackingModel.setData({
           loaded: true,
           order,

@@ -36,6 +36,7 @@
             </VBox>
             <VBox class="blFooterColumn">
                 <Title text="{i18n>footerHelp}" level="H3" class="blFooterTitle" />
+                <Link text="{i18n>myOrdersTitle}" press=".onOpenMyOrders" class="blFooterLink" />
                 <Link text="{i18n>howToBuyTitle}" press=".onOpenHowToBuy" class="blFooterLink" />
                 <Link text="{i18n>helpPageTitle}" press=".onOpenHelp" class="blFooterLink" />
             </VBox>

@@ -1311,6 +1311,10 @@
     gap: 0.5rem;
 }
 
+.blContainer.blMyOrders {
+    max-width: 40rem;
+}
+
 .blFooterBottom {
     gap: 0.5rem;
     max-width: 76rem;
@@ -1563,6 +1567,11 @@
 
     .blHeader.sapMBar .sapMBarContainer > .sapMBarChild.blHeaderAction {
         margin: 0;
+    }
+
+    /* A bolinha de quantidade passa da borda do botão; sem folga ela é cortada pela borda da tela. */
+    .blHeader.sapMBar .sapMBarContainer > .sapMBarChild.blCartButton {
+        margin-right: calc(0.625rem + env(safe-area-inset-right, 0px));
     }
 
     .blHeaderAction.sapMBtn {

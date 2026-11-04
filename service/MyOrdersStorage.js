@@ -1,0 +1,2 @@
+sap.ui.define(["sap/ui/util/Storage"],function(t){"use strict";const e="benditaLook.myOrders";const s=50;class i{static storage=new t(t.Type.local);static list(){return this.storage.get(e)??[]}static add(t,e){const s=this.list().filter(e=>e.Number!==t);const i={Number:t,AccessCode:e,SavedAt:(new Date).toISOString()};this.write([i,...s])}static remove(t){this.write(this.list().filter(e=>e.Number!==t))}static keep(t){this.write(this.list().filter(e=>t.includes(e.Number)))}static write(t){this.storage.put(e,t.slice(0,s))}}return i});
+//# sourceMappingURL=MyOrdersStorage.js.map

@@ -27,7 +27,7 @@ const STEPS: StepDefinition[] = [
     { id: "cart", icon: "sap-icon://cart", action: { route: "cart" } },
     { id: "checkout", icon: "sap-icon://form" },
     { id: "whatsapp", icon: "sap-icon://discussion" },
-    { id: "track", icon: "sap-icon://shipping-status" },
+    { id: "track", icon: "sap-icon://shipping-status", action: { route: "myOrders" } },
     { id: "exchange", icon: "sap-icon://journey-change", action: { route: "policy", params: { type: "RETURN" } } }
 ];
 

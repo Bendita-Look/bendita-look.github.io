@@ -1,0 +1,76 @@
+<mvc:View
+    controllerName="apps.dflc.benditalook.controller.MyOrders"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Page id="myOrdersPage" class="blPage">
+        <customHeader>
+            <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.StoreHeader" type="XML" />
+        </customHeader>
+        <content>
+            <VBox class="blContainer blMyOrders">
+                <Title text="{i18n>myOrdersTitle}" level="H1" titleStyle="H2" class="blSectionTitle" />
+                <Text text="{i18n>myOrdersIntro}" class="blMuted sapUiSmallMarginBottom" />
+
+                <List
+                    id="myOrdersList"
+                    items="{myOrders>/orders}"
+                    mode="Delete"
+                    delete=".onRemoveOrder"
+                    busy="{myOrders>/loading}"
+                    noDataText="{i18n>myOrdersEmpty}"
+                    showSeparators="Inner"
+                >
+                    <ObjectListItem
+                        type="Navigation"
+                        press=".onOpenOrder"
+                        title="{parts: ['i18n>orderNumber', 'myOrders>Number'], formatter: '.formatter.message'}"
+                        number="{path: 'myOrders>TotalAmount', formatter: '.formatter.currency'}"
+                    >
+                        <firstStatus>
+                            <ObjectStatus
+                                text="{path: 'myOrders>Status', formatter: '.formatStatus'}"
+                                state="{path: 'myOrders>Status', formatter: '.formatter.statusState'}"
+                            />
+                        </firstStatus>
+                        <attributes>
+                            <ObjectAttribute text="{path: 'myOrders>createdAt', formatter: '.formatter.dateTime'}" />
+                            <ObjectAttribute text="{parts: ['i18n>myOrderItems', 'myOrders>ItemCount'], formatter: '.formatter.message'}" />
+                        </attributes>
+                    </ObjectListItem>
+                </List>
+
+                <VBox class="sapUiMediumMarginTop">
+                    <Title text="{i18n>myOrdersRecoverTitle}" level="H3" class="sapUiTinyMarginBottom" />
+                    <Text text="{i18n>myOrdersRecoverText}" class="sapUiSmallMarginBottom" />
+                    <Label text="{i18n>myOrdersEmailLabel}" labelFor="myOrdersEmailInput" />
+                    <Input
+                        id="myOrdersEmailInput"
+                        type="Email"
+                        value="{myOrders>/email}"
+                        valueState="{myOrders>/emailState}"
+                        valueStateText="{i18n>myOrdersInvalidEmail}"
+                        maxLength="120"
+                    />
+                    <Button
+                        text="{i18n>myOrdersRecoverButton}"
+                        type="Emphasized"
+                        busy="{myOrders>/sending}"
+                        press=".onRequestLinks"
+                        class="sapUiSmallMarginTop"
+                    />
+                    <MessageStrip
+                        type="Success"
+                        showIcon="true"
+                        text="{myOrders>/sentMessage}"
+                        visible="{= !!${myOrders>/sentMessage} }"
+                        class="sapUiSmallMarginTop"
+                    />
+                </VBox>
+            </VBox>
+
+            <core:Fragment fragmentName="apps.dflc.benditalook.view.fragments.StoreFooter" type="XML" />
+        </content>
+    </Page>
+</mvc:View>

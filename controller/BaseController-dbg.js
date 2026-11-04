@@ -65,6 +65,9 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/core/UIComponent", "sap/ui/
       this.howToBuyDialog?.close();
       this.navTo("help");
     },
+    onOpenMyOrders: function _onOpenMyOrders() {
+      this.navTo("myOrders");
+    },
     onStartShopping: function _onStartShopping() {
       this.howToBuyDialog?.close();
       this.navTo("catalog");

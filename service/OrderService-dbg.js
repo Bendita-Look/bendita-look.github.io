@@ -43,6 +43,21 @@ sap.ui.define([], function () {
       await operation.invoke();
       return operation.getBoundContext().getObject();
     }
+    async lookupOrders(orders) {
+      const operation = this.catalogModel.bindContext("/LookupOrders(...)");
+      operation.setParameter("Orders", orders.map(order => ({
+        Number: order.Number,
+        AccessCode: order.AccessCode
+      })));
+      await operation.invoke();
+      return operation.getBoundContext().getObject().value;
+    }
+    async requestOrderLinks(email) {
+      const operation = this.catalogModel.bindContext("/RequestOrderLinks(...)");
+      operation.setParameter("Email", email);
+      await operation.invoke();
+      return operation.getBoundContext().getObject().data;
+    }
     toItemsInput(items) {
       return items.map(item => ({
         Variant_ID: item.VariantId,

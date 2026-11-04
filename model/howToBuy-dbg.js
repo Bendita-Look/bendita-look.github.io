@@ -25,7 +25,10 @@ sap.ui.define([], function () {
     icon: "sap-icon://discussion"
   }, {
     id: "track",
-    icon: "sap-icon://shipping-status"
+    icon: "sap-icon://shipping-status",
+    action: {
+      route: "myOrders"
+    }
   }, {
     id: "exchange",
     icon: "sap-icon://journey-change",

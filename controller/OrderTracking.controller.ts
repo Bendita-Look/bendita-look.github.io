@@ -6,6 +6,7 @@ import BaseController from "./BaseController";
 import OrderService, { FulfillmentType } from "../service/OrderService";
 import { DeliveryType } from "../service/AdminOrderService";
 import formatter, { OrderStatus } from "../model/formatter";
+import MyOrdersStorage from "../service/MyOrdersStorage";
 
 interface TrackingStep {
     text: string;
@@ -58,6 +59,8 @@ export default class OrderTracking extends BaseController {
 
         try {
             const order = await this.runBusy(() => new OrderService(this.getCatalogModel()).trackOrder(Number(orderNumber), accessCode));
+
+            MyOrdersStorage.add(Number(orderNumber), accessCode);
 
             this.trackingModel.setData({
                 loaded: true,

@@ -9,6 +9,7 @@ import BaseController from "./BaseController";
 import OrderService, { CouponStatus, CustomerContact, FulfillmentType, OrderQuote } from "../service/OrderService";
 import AddressService, { ZipCodeAddress } from "../service/AddressService";
 import ContactStorage from "../service/ContactStorage";
+import MyOrdersStorage from "../service/MyOrdersStorage";
 
 type ValidatedField = "CustomerName" | "CustomerEmail" | "CustomerPhone" | "ZipCode" | "AddressNumber" | "Address" | "District" | "City" | "State";
 
@@ -124,6 +125,7 @@ export default class Cart extends BaseController {
             const order = await this.runBusy(() => new OrderService(this.getCatalogModel()).submitOrder(contact, cartItems));
 
             ContactStorage.save(contact);
+            MyOrdersStorage.add(order.Number, order.AccessCode);
             this.getCartModel().clear();
             this.checkoutModel.setData(this.initialState());
 

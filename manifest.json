@@ -116,6 +116,11 @@
 					"target": "unsubscribe"
 				},
 				{
+					"name": "myOrders",
+					"pattern": "my-orders",
+					"target": "myOrders"
+				},
+				{
 					"name": "admin",
 					"pattern": "admin/:tab:",
 					"target": "admin"
@@ -165,6 +170,11 @@
 				"unsubscribe": {
 					"id": "Unsubscribe",
 					"name": "Unsubscribe",
+					"level": 2
+				},
+				"myOrders": {
+					"id": "MyOrders",
+					"name": "MyOrders",
 					"level": 2
 				},
 				"admin": {

@@ -1,4 +1,5 @@
 import type ODataModel from "sap/ui/model/odata/v4/ODataModel";
+import type { StoredOrder } from "./MyOrdersStorage";
 
 export enum FulfillmentType {
     Delivery = "DELIVERY",
@@ -98,6 +99,16 @@ export interface TrackedOrder {
     Returns: TrackedReturn[];
 }
 
+export interface OrderSummary {
+    Number: number;
+    AccessCode: string;
+    Status: string;
+    FulfillmentType: string;
+    TotalAmount: string | number;
+    ItemCount: number;
+    createdAt: string;
+}
+
 export default class OrderService {
 
     constructor(private readonly catalogModel: ODataModel) { }
@@ -140,6 +151,26 @@ export default class OrderService {
         await operation.invoke();
 
         return operation.getBoundContext().getObject() as TrackedOrder;
+    }
+
+    public async lookupOrders(orders: Array<Pick<StoredOrder, "Number" | "AccessCode">>): Promise<OrderSummary[]> {
+        const operation = this.catalogModel.bindContext("/LookupOrders(...)");
+
+        operation.setParameter("Orders", orders.map((order) => ({ Number: order.Number, AccessCode: order.AccessCode })));
+
+        await operation.invoke();
+
+        return (operation.getBoundContext().getObject() as { value: OrderSummary[] }).value;
+    }
+
+    public async requestOrderLinks(email: string): Promise<string> {
+        const operation = this.catalogModel.bindContext("/RequestOrderLinks(...)");
+
+        operation.setParameter("Email", email);
+
+        await operation.invoke();
+
+        return (operation.getBoundContext().getObject() as { data: string }).data;
     }
 
     private toItemsInput(items: OrderLineInput[]): object[] {
