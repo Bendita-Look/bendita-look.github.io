@@ -1310,6 +1310,17 @@
     font-weight: 700;
 }
 
+.blOpenInBrowser {
+    max-width: 32rem;
+}
+
+.blOpenInBrowserIcon.sapUiIcon {
+    display: block;
+    text-align: center;
+    font-size: 3rem;
+    color: var(--bl-rose);
+}
+
 .blUnsubscribe {
     max-width: 34rem;
     margin: 0 auto;

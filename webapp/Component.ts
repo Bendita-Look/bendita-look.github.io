@@ -24,6 +24,8 @@ import { createNotificationModel, showBrowserNotification } from "./util/notific
 import { pushSupported, registerServiceWorker } from "./util/push";
 import { playOrderChime } from "./util/sound";
 import { buildHowToBuySteps } from "./model/howToBuy";
+import { currentUrl, detectInAppBrowser, externalBrowserUrl, restoreForwardedRoute } from "./util/inAppBrowser";
+import type { InAppBrowserInfo } from "./util/inAppBrowser";
 
 const ADMIN_ROUTE = "admin";
 const LOGIN_ROUTE = "login";
@@ -56,6 +58,7 @@ export default class Component extends BaseComponent {
     }
 
     private async start(): Promise<void> {
+        restoreForwardedRoute();
         await this.loadRuntimeConfig();
 
         AuthenticationService.initialize(AuthenticatedProviderFactory.create());
@@ -75,6 +78,13 @@ export default class Component extends BaseComponent {
         this.setModel(this.createODataModel(XsuaaAuthHelper.getConfig().catalogService), "catalog");
         this.setModel(this.createOrderPushModel(), "orderPush");
 
+        const inAppBrowser = detectInAppBrowser();
+
+        if (inAppBrowser) {
+            this.showOpenInBrowser(inAppBrowser);
+            return;
+        }
+
         void this.refreshStoreInfo();
         void this.syncOrderWatcher();
         void this.syncOrderPush();
@@ -85,6 +95,12 @@ export default class Component extends BaseComponent {
         router.initialize();
 
         await this.completeLoginRedirect();
+    }
+
+    // Dentro de apps (Instagram etc.) só a tela de "abrir no navegador"; o router não inicia para preservar o hash atual.
+    private showOpenInBrowser(info: InAppBrowserInfo): void {
+        this.setModel(new JSONModel({ ...info, externalUrl: externalBrowserUrl(info.platform), link: currentUrl() }), "inApp");
+        void (this.getRouter() as MobileRouter).getTargets()?.display("openInBrowser");
     }
 
     /** Liga/desliga o vigia de pedidos conforme a sessão e registra o aviso de novos pedidos. */

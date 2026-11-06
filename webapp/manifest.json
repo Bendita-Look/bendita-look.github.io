@@ -180,6 +180,11 @@
           "id": "ProductEditor",
           "name": "ProductEditor",
           "level": 3
+        },
+        "openInBrowser": {
+          "id": "OpenInBrowser",
+          "name": "OpenInBrowser",
+          "level": 1
         }
       }
     },
