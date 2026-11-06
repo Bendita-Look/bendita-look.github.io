@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/m/MessageToast", "./model/models", "./util/pwa", "./model/CartModel", "./auth/AuthenticationService", "./auth/providers/AuthenticatedProviderFactory", "./auth/providers/XsuaaAuthHelper", "./auth/storage/SessionStorage", "./util/Environment", "./util/http", "./util/feedback", "./service/StoreService", "./service/OrderPushService", "./service/OrderWatcher", "./util/notifications", "./util/push", "./util/sound", "./model/howToBuy"], function (BaseComponent, ODataModel, JSONModel, MessageBox, MessageToast, ___model_models, ___util_pwa, __CartModel, ___auth_AuthenticationService, ___auth_providers_AuthenticatedProviderFactory, ___auth_providers_XsuaaAuthHelper, ___auth_storage_SessionStorage, __Environment, ___util_http, ___util_feedback, __StoreService, __OrderPushService, __OrderWatcher, ___util_notifications, ___util_push, ___util_sound, ___model_howToBuy) {
+sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "sap/ui/model/json/JSONModel", "sap/m/MessageBox", "sap/m/MessageToast", "./model/models", "./util/pwa", "./model/CartModel", "./auth/AuthenticationService", "./auth/providers/AuthenticatedProviderFactory", "./auth/providers/XsuaaAuthHelper", "./auth/storage/SessionStorage", "./util/Environment", "./util/http", "./util/feedback", "./service/StoreService", "./service/OrderPushService", "./service/OrderWatcher", "./util/notifications", "./util/push", "./util/sound", "./model/howToBuy", "./util/inAppBrowser"], function (BaseComponent, ODataModel, JSONModel, MessageBox, MessageToast, ___model_models, ___util_pwa, __CartModel, ___auth_AuthenticationService, ___auth_providers_AuthenticatedProviderFactory, ___auth_providers_XsuaaAuthHelper, ___auth_storage_SessionStorage, __Environment, ___util_http, ___util_feedback, __StoreService, __OrderPushService, __OrderWatcher, ___util_notifications, ___util_push, ___util_sound, ___model_howToBuy, ___util_inAppBrowser) {
   "use strict";
 
   function _interopRequireDefault(obj) {
@@ -28,6 +28,10 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
   const registerServiceWorker = ___util_push["registerServiceWorker"];
   const playOrderChime = ___util_sound["playOrderChime"];
   const buildHowToBuySteps = ___model_howToBuy["buildHowToBuySteps"];
+  const currentUrl = ___util_inAppBrowser["currentUrl"];
+  const detectInAppBrowser = ___util_inAppBrowser["detectInAppBrowser"];
+  const externalBrowserUrl = ___util_inAppBrowser["externalBrowserUrl"];
+  const restoreForwardedRoute = ___util_inAppBrowser["restoreForwardedRoute"];
   const ADMIN_ROUTE = "admin";
   const LOGIN_ROUTE = "login";
 
@@ -52,6 +56,7 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
       void this.start();
     },
     start: async function _start() {
+      restoreForwardedRoute();
       await this.loadRuntimeConfig();
       AuthenticationService.initialize(AuthenticatedProviderFactory.create());
       AuthenticationService.onSessionExpired(() => this.handleSessionExpired());
@@ -72,6 +77,11 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
       this.setModel(this.createHowToBuyModel(), "howToBuy");
       this.setModel(this.createODataModel(XsuaaAuthHelper.getConfig().catalogService), "catalog");
       this.setModel(this.createOrderPushModel(), "orderPush");
+      const inAppBrowser = detectInAppBrowser();
+      if (inAppBrowser) {
+        this.showOpenInBrowser(inAppBrowser);
+        return;
+      }
       void this.refreshStoreInfo();
       void this.syncOrderWatcher();
       void this.syncOrderPush();
@@ -79,6 +89,15 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
       router.getTargetHandler().setCloseDialogs(false);
       router.initialize();
       await this.completeLoginRedirect();
+    },
+    // Dentro de apps (Instagram etc.) só a tela de "abrir no navegador"; o router não inicia para preservar o hash atual.
+    showOpenInBrowser: function _showOpenInBrowser(info) {
+      this.setModel(new JSONModel({
+        ...info,
+        externalUrl: externalBrowserUrl(info.platform),
+        link: currentUrl()
+      }), "inApp");
+      void this.getRouter().getTargets()?.display("openInBrowser");
     },
     /** Liga/desliga o vigia de pedidos conforme a sessão e registra o aviso de novos pedidos. */syncOrderWatcher: async function _syncOrderWatcher() {
       const watcher = OrderWatcher.getInstance(() => this.ensureAdminModel());

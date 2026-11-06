@@ -1,0 +1,78 @@
+<mvc:View
+    controllerName="apps.dflc.benditalook.controller.OpenInBrowser"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+>
+    <Page id="openInBrowserPage" class="blPage">
+        <customHeader>
+            <Bar class="blHeader">
+                <contentMiddle>
+                    <Image
+                        src="img/logo.webp"
+                        alt="{i18n>appTitle}"
+                        tooltip="{i18n>appTitle}"
+                        densityAware="false"
+                        class="blHeaderLogo"
+                    />
+                </contentMiddle>
+            </Bar>
+        </customHeader>
+        <content>
+            <VBox class="blContainer blOpenInBrowser">
+                <core:Icon src="sap-icon://action" class="blOpenInBrowserIcon" />
+                <Title text="{i18n>openInBrowserTitle}" level="H1" titleStyle="H2" wrapping="true" class="blSectionTitle" />
+                <Text id="openInBrowserIntro" text="{inApp>/intro}" wrapping="true" class="blMuted" />
+
+                <Button
+                    id="openInBrowserAndroid"
+                    text="{i18n>openInBrowserButtonAndroid}"
+                    type="Emphasized"
+                    width="100%"
+                    visible="{= ${inApp>/platform} === 'android' &amp;&amp; !!${inApp>/externalUrl} }"
+                    press=".onOpenExternal"
+                    class="sapUiMediumMarginTop"
+                />
+                <Button
+                    id="openInBrowserIos"
+                    text="{i18n>openInBrowserButtonIos}"
+                    type="Emphasized"
+                    width="100%"
+                    visible="{= ${inApp>/platform} === 'ios' &amp;&amp; !!${inApp>/externalUrl} }"
+                    press=".onOpenExternal"
+                    class="sapUiMediumMarginTop"
+                />
+
+                <Title text="{i18n>openInBrowserManualTitle}" level="H3" class="sapUiMediumMarginTop" />
+                <List id="openInBrowserSteps" showSeparators="None">
+                    <CustomListItem>
+                        <Text text="{i18n>openInBrowserStepMenu}" wrapping="true" />
+                    </CustomListItem>
+                    <CustomListItem>
+                        <Text text="{i18n>openInBrowserStepChoose}" wrapping="true" />
+                    </CustomListItem>
+                    <CustomListItem visible="{= ${inApp>/platform} === 'ios' }">
+                        <Text text="{i18n>openInBrowserStepIosInstall}" wrapping="true" />
+                    </CustomListItem>
+                </List>
+
+                <Input
+                    id="openInBrowserLink"
+                    value="{inApp>/link}"
+                    editable="false"
+                    class="sapUiMediumMarginTop"
+                />
+                <Button
+                    id="openInBrowserCopy"
+                    text="{i18n>openInBrowserCopy}"
+                    icon="sap-icon://copy"
+                    width="100%"
+                    press=".onCopyLink"
+                    class="sapUiTinyMarginTop"
+                />
+
+                <Text text="{i18n>openInBrowserWhy}" wrapping="true" class="blMuted sapUiMediumMarginTop" />
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>
