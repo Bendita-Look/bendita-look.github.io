@@ -5,6 +5,8 @@ import { URLHelper } from "sap/m/library";
 import type Input from "sap/m/Input";
 import type JSONModel from "sap/ui/model/json/JSONModel";
 
+const OPEN_CHECK_DELAY_MS = 1500;
+
 /**
  * Tela exibida dentro de navegadores embutidos de apps (Instagram, Facebook etc.):
  * explica como abrir o site no navegador do celular. Dados vêm do model "inApp".
@@ -16,17 +18,33 @@ export default class OpenInBrowser extends BaseController {
     public onInit(): void {
         const model = this.getInAppModel();
         const appName = model.getProperty("/appName") as string | null;
-        const intro = appName ? this.getText("openInBrowserIntroApp", [appName]) : this.getText("openInBrowserIntro");
 
-        model.setProperty("/intro", intro);
+        model.setProperty("/intro", this.appText("openInBrowserIntro", appName));
+        model.setProperty("/blockedText", this.appText("openInBrowserBlocked", appName));
     }
 
     public onOpenExternal(): void {
-        const externalUrl = this.getInAppModel().getProperty("/externalUrl") as string | null;
+        const model = this.getInAppModel();
+        const externalUrl = model.getProperty("/externalUrl") as string | null;
 
         if (externalUrl) {
+            model.setProperty("/openFailed", false);
             URLHelper.redirect(externalUrl, false);
+            this.flagIfStillInApp(model);
         }
+    }
+
+    // Apps como o Instagram bloqueiam o atalho sem erro: se a página continua visível, o link não saiu do app.
+    private flagIfStillInApp(model: JSONModel): void {
+        setTimeout(() => {
+            if (document.visibilityState === "visible") {
+                model.setProperty("/openFailed", true);
+            }
+        }, OPEN_CHECK_DELAY_MS);
+    }
+
+    private appText(key: string, appName: string | null): string {
+        return appName ? this.getText(`${key}App`, [appName]) : this.getText(key);
     }
 
     public async onCopyLink(): Promise<void> {
