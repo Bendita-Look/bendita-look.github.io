@@ -7,6 +7,8 @@ sap.ui.define(["./BaseController", "sap/m/MessageToast", "sap/m/library"], funct
   /* eslint-disable fiori-custom/sap-no-navigator */
   const BaseController = _interopRequireDefault(__BaseController);
   const URLHelper = sap_m_library["URLHelper"];
+  const OPEN_CHECK_DELAY_MS = 1500;
+
   /**
    * Tela exibida dentro de navegadores embutidos de apps (Instagram, Facebook etc.):
    * explica como abrir o site no navegador do celular. Dados vêm do model "inApp".
@@ -17,14 +19,28 @@ sap.ui.define(["./BaseController", "sap/m/MessageToast", "sap/m/library"], funct
     onInit: function _onInit() {
       const model = this.getInAppModel();
       const appName = model.getProperty("/appName");
-      const intro = appName ? this.getText("openInBrowserIntroApp", [appName]) : this.getText("openInBrowserIntro");
-      model.setProperty("/intro", intro);
+      model.setProperty("/intro", this.appText("openInBrowserIntro", appName));
+      model.setProperty("/blockedText", this.appText("openInBrowserBlocked", appName));
     },
     onOpenExternal: function _onOpenExternal() {
-      const externalUrl = this.getInAppModel().getProperty("/externalUrl");
+      const model = this.getInAppModel();
+      const externalUrl = model.getProperty("/externalUrl");
       if (externalUrl) {
+        model.setProperty("/openFailed", false);
         URLHelper.redirect(externalUrl, false);
+        this.flagIfStillInApp(model);
       }
+    },
+    // Apps como o Instagram bloqueiam o atalho sem erro: se a página continua visível, o link não saiu do app.
+    flagIfStillInApp: function _flagIfStillInApp(model) {
+      setTimeout(() => {
+        if (document.visibilityState === "visible") {
+          model.setProperty("/openFailed", true);
+        }
+      }, OPEN_CHECK_DELAY_MS);
+    },
+    appText: function _appText(key, appName) {
+      return appName ? this.getText(`${key}App`, [appName]) : this.getText(key);
     },
     onCopyLink: async function _onCopyLink() {
       const link = this.getInAppModel().getProperty("/link");

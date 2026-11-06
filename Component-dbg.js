@@ -57,6 +57,11 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
     },
     start: async function _start() {
       restoreForwardedRoute();
+      const inAppBrowser = detectInAppBrowser();
+      if (inAppBrowser) {
+        this.showOpenInBrowser(inAppBrowser);
+        return;
+      }
       await this.loadRuntimeConfig();
       AuthenticationService.initialize(AuthenticatedProviderFactory.create());
       AuthenticationService.onSessionExpired(() => this.handleSessionExpired());
@@ -77,11 +82,6 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
       this.setModel(this.createHowToBuyModel(), "howToBuy");
       this.setModel(this.createODataModel(XsuaaAuthHelper.getConfig().catalogService), "catalog");
       this.setModel(this.createOrderPushModel(), "orderPush");
-      const inAppBrowser = detectInAppBrowser();
-      if (inAppBrowser) {
-        this.showOpenInBrowser(inAppBrowser);
-        return;
-      }
       void this.refreshStoreInfo();
       void this.syncOrderWatcher();
       void this.syncOrderPush();
@@ -90,12 +90,14 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
       router.initialize();
       await this.completeLoginRedirect();
     },
-    // Dentro de apps (Instagram etc.) só a tela de "abrir no navegador"; o router não inicia para preservar o hash atual.
+    // Dentro de apps (Instagram etc.) só a tela de "abrir no navegador", sem modelos OData nem pedido de rede
+    // (o backend indisponível cairia por cima da tela); o router não inicia para preservar o hash atual.
     showOpenInBrowser: function _showOpenInBrowser(info) {
       this.setModel(new JSONModel({
         ...info,
         externalUrl: externalBrowserUrl(info.platform),
-        link: currentUrl()
+        link: currentUrl(),
+        openFailed: false
       }), "inApp");
       void this.getRouter().getTargets()?.display("openInBrowser");
     },

@@ -43,6 +43,15 @@
                     class="sapUiMediumMarginTop"
                 />
 
+                <MessageStrip
+                    id="openInBrowserBlocked"
+                    text="{inApp>/blockedText}"
+                    type="Warning"
+                    showIcon="true"
+                    visible="{inApp>/openFailed}"
+                    class="sapUiSmallMarginTop"
+                />
+
                 <Title text="{i18n>openInBrowserManualTitle}" level="H3" class="sapUiMediumMarginTop" />
                 <List id="openInBrowserSteps" showSeparators="None">
                     <CustomListItem>
