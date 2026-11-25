@@ -60,7 +60,8 @@ export default class Component extends BaseComponent {
     private async start(): Promise<void> {
         restoreForwardedRoute();
 
-        const inAppBrowser = detectInAppBrowser();
+        // Liga/desliga em manifest.json (sap.ui5/config/openInBrowserScreen).
+        const inAppBrowser = this.getManifestEntry("/sap.ui5/config/openInBrowserScreen") === true ? detectInAppBrowser() : null;
 
         if (inAppBrowser) {
             this.showOpenInBrowser(inAppBrowser);

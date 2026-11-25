@@ -57,7 +57,9 @@ sap.ui.define(["sap/ui/core/UIComponent", "sap/ui/model/odata/v4/ODataModel", "s
     },
     start: async function _start() {
       restoreForwardedRoute();
-      const inAppBrowser = detectInAppBrowser();
+
+      // Liga/desliga em manifest.json (sap.ui5/config/openInBrowserScreen).
+      const inAppBrowser = this.getManifestEntry("/sap.ui5/config/openInBrowserScreen") === true ? detectInAppBrowser() : null;
       if (inAppBrowser) {
         this.showOpenInBrowser(inAppBrowser);
         return;
