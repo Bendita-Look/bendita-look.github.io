@@ -26,6 +26,9 @@
     }
   },
   "sap.ui5": {
+    "config": {
+      "openInBrowserScreen": false
+    },
     "dependencies": {
       "minUI5Version": "1.136.0",
       "libs": {
